@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+@theme {
+  --color-header-bg: #0d0d0d;
+  --color-app-bg: #050505;
+  --color-card-bg: #121212;
+  --color-card-border: #1e1e1e;
+  --color-input-container-bg: #151515;
+  --color-traycer-blue: #a3a3a3; /* Light Grey accent instead of blue */
+  --color-check-green: #22c55e;
+  --color-text-dim: #737373;
+  --color-text-main: #ffffff;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-app-bg);
+    color: var(--color-text-main);
+    @apply antialiased select-none;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+}
+
+@layer components {
+  .traycer-card {
+    @apply border border-card-border bg-card-bg p-5 rounded-xl transition-all hover:bg-[#1a1a1a] cursor-pointer;
+  }
+  
+  .traycer-header {
+    @apply flex items-center justify-between px-4 py-3 bg-header-bg border-b border-card-border text-[13px] font-semibold;
+  }
+
+  .input-bar-v2 {
+    @apply bg-input-container-bg border border-card-border rounded-xl p-3 flex flex-col gap-2;
+  }
+
+  .chip-v2 {
+    @apply px-3 py-1 bg-card-bg border border-card-border rounded-lg text-[11px] text-text-dim hover:text-text-main transition-all;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #444;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

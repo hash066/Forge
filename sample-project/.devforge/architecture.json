@@ -1,0 +1,19 @@
+{
+    "constraints": {
+        "scale": "enterprise",
+        "budget": 500,
+        "teamSize": 3,
+        "architectureType": "monolith",
+        "currentUsers": 1000,
+        "projectedUsers": 100000,
+        "peakLoad": 1000,
+        "deploymentFrequency": "weekly",
+        "domain": "web"
+    },
+    "components": [
+        { "id": "monolith-core", "type": "service", "name": "E-Commerce Monolith", "technology": "Node.js" },
+        { "id": "primary-db", "type": "database", "name": "User DB", "technology": "PostgreSQL" }
+    ],
+    "connections": [],
+    "version": "1.0.0"
+}

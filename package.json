@@ -1,0 +1,99 @@
+{
+  "name": "devforge",
+  "displayName": "DevForge",
+  "version": "0.1.0",
+  "publisher": "devforge",
+  "engines": {
+    "vscode": "^1.107.0"
+  },
+  "main": "./forge/dist/extension.js",
+  "activationEvents": [],
+  "contributes": {
+    "commands": [
+      {
+        "command": "devforge.analyzeCode",
+        "title": "DevForge: Analyze Code",
+        "category": "DevForge"
+      },
+      {
+        "command": "devforge.showDashboard",
+        "title": "DevForge: Show Dashboard",
+        "category": "DevForge"
+      },
+      {
+        "command": "devforge.createBlueprint",
+        "title": "DevForge: Create Blueprint",
+        "category": "DevForge"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "devforge-sidebar",
+          "title": "DevForge",
+          "icon": "$(rocket)"
+        }
+      ]
+    },
+    "views": {
+      "devforge-sidebar": [
+        {
+          "type": "webview",
+          "id": "devforge-left-panel",
+          "name": "Explorer",
+          "icon": "$(search)"
+        },
+        {
+          "type": "webview",
+          "id": "devforge-right-panel",
+          "name": "Dashboard",
+          "icon": "$(dashboard)"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "DevForge",
+      "properties": {
+        "devforge.apiEndpoint": {
+          "type": "string",
+          "default": "https://api.devforge.com",
+          "description": "API Endpoint URL for DevForge services."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "webpack",
+    "watch": "webpack --watch"
+  },
+  "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.1003.0",
+    "@aws-sdk/client-lambda": "^3.1003.0",
+    "axios": "^1.13.6",
+    "chokidar": "^5.0.0",
+    "lucide-react": "^0.577.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "recharts": "^3.8.0",
+    "tree-sitter": "^0.25.0",
+    "tree-sitter-javascript": "^0.25.0",
+    "tree-sitter-python": "^0.25.0",
+    "tree-sitter-typescript": "^0.23.2"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.1",
+    "@types/node": "^25.3.5",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "autoprefixer": "^10.4.27",
+    "css-loader": "^7.1.4",
+    "postcss": "^8.5.8",
+    "postcss-loader": "^8.2.1",
+    "style-loader": "^4.0.0",
+    "tailwindcss": "^4.2.1",
+    "ts-loader": "^9.5.4",
+    "typescript": "^5.9.3",
+    "webpack": "^5.105.4",
+    "webpack-cli": "^6.0.1"
+  }
+}
