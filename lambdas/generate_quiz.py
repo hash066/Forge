@@ -2,8 +2,8 @@ import json
 import boto3
 import os
 
-bedrock = boto3.client('bedrock-runtime')
 MODEL_ID = os.environ.get('BEDROCK_MODEL_ID', 'anthropic.claude-sonnet-4-20250514-v1:0')
+bedrock = None
 
 def lambda_handler(event, context):
     try:
@@ -17,6 +17,13 @@ def lambda_handler(event, context):
         
         if not code:
             return error_response(400, "Code is required")
+            
+        if len(code) > 50000:
+            return error_response(413, "Payload size exceeds 50000 characters maximum limits.")
+            
+        global bedrock
+        if bedrock is None:
+            bedrock = boto3.client('bedrock-runtime')
         
         prompt = f"""Generate a single multiple-choice comprehension question about this {language} code.
 

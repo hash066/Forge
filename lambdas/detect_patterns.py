@@ -11,6 +11,13 @@ def lambda_handler(event, context):
         code = body.get('code', '')
         language = body.get('language', 'javascript')
         
+        if len(code) > 50000:
+            return {
+                'statusCode': 413,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'error': 'Payload size exceeds 50000 characters maximum limits.'})
+            }
+        
         patterns = []
         
         # Detect nested loops (O(n²))
@@ -91,17 +98,25 @@ def lambda_handler(event, context):
         }
 
 def count_nested_loops(code):
-    # Count nested for/while loops
-    depth = 0
     max_depth = 0
+    clean_code = re.sub(r'//.*|#.*', '', code)
+    lines = clean_code.split('\n')
     
-    for line in code.split('\n'):
-        if 'for' in line or 'while' in line:
-            depth += 1
-            max_depth = max(max_depth, depth)
-        if '}' in line or 'end' in line:
-            depth = max(0, depth - 1)
+    loop_indents = []
     
+    for line in lines:
+        stripped = line.lstrip()
+        if not stripped:
+            continue
+            
+        indent = len(line) - len(stripped)
+        
+        loop_indents = [i for i in loop_indents if i < indent]
+        
+        if re.match(r'^(for|while)\b', stripped):
+            loop_indents.append(indent)
+            max_depth = max(max_depth, len(loop_indents))
+            
     return max_depth
 
 def has_sorting(code, language):
@@ -123,4 +138,4 @@ def has_recursion(code):
 
 def has_binary_search(code):
     # Heuristic: looks for mid = (left + right) / 2 pattern
-    return 'mid' in code and ('left' in code or 'right' in code) and '/2' in code or '>> 1' in code
+    return 'mid' in code and ('left' in code or 'right' in code) and ('/2' in code or '>> 1' in code)

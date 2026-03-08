@@ -2,7 +2,7 @@ import { Violation } from '../shared/types';
 
 export class SecurityScanner {
     private secretPatterns: Record<string, RegExp> = {
-        'API Key': /[A-Z0-9]{20,}/g, // Generic API Key pattern
+        'API Key': /(?:api_?key|secret)[=:]\s*["'][A-Za-z0-9_\-.]{20,}["']/gi, // Context-aware API Key pattern
         'AWS Secret': /aws_secret_access_key\s*=\s*[^\s]+/gi,
         'AWS Access ID': /aws_access_key_id\s*=\s*[A-Z0-9]{20}/gi,
         'Password In Code': /password\s*=\s*["'][^"']+["']/gi,

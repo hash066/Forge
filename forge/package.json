@@ -34,7 +34,7 @@
         {
           "id": "devforge-sidebar",
           "title": "DevForge",
-          "icon": "$(rocket)"
+          "icon": "media/rocket.svg"
         }
       ]
     },
@@ -43,14 +43,7 @@
         {
           "type": "webview",
           "id": "devforge-left-panel",
-          "name": "Explorer",
-          "icon": "$(search)"
-        },
-        {
-          "type": "webview",
-          "id": "devforge-right-panel",
-          "name": "Dashboard",
-          "icon": "$(dashboard)"
+          "name": "DevForge"
         }
       ]
     },

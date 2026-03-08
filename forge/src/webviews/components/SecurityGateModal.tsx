@@ -5,9 +5,10 @@ interface SecurityGateModalProps {
     violations: Violation[];
     onFixAll: () => void;
     onFixManually: () => void;
+    onDismiss: () => void;
 }
 
-const SecurityGateModal: React.FC<SecurityGateModalProps> = ({ violations, onFixAll, onFixManually }) => {
+const SecurityGateModal: React.FC<SecurityGateModalProps> = ({ violations, onFixAll, onFixManually, onDismiss }) => {
     if (violations.length === 0) return null;
 
     // Highest severity violations first
@@ -30,7 +31,7 @@ const SecurityGateModal: React.FC<SecurityGateModalProps> = ({ violations, onFix
 
                 <div className="flex-1 overflow-y-auto p-4 space-y-3">
                     {sortedViolations.map((v, i) => (
-                        <div key={i} className="bg-header/10 border border-border p-4 transition-all hover:border-red-500/50 group">
+                        <div key={`${v.description}-${i}`} className="bg-header/10 border border-border p-4 transition-all hover:border-red-500/50 group">
                             <div className="flex justify-between items-start mb-2">
                                 <span className={`text-[8px] font-black uppercase px-2 py-0.5 ${
                                     v.severity === 'critical' ? 'bg-red-500 text-bg' : 'border border-red-500 text-red-500'
@@ -61,6 +62,12 @@ const SecurityGateModal: React.FC<SecurityGateModalProps> = ({ violations, onFix
                         className="w-full py-3 border border-border hover:bg-header/10 text-fg/40 hover:text-fg text-[10px] font-black uppercase tracking-widest transition-all"
                     >
                         Manual Protocol Correction
+                    </button>
+                    <button 
+                        onClick={onDismiss}
+                        className="w-full py-3 border border-border hover:bg-header/10 text-fg/40 hover:text-white text-[10px] font-black uppercase tracking-widest transition-all"
+                    >
+                        Acknowledge & Dismiss (Suppress Warnings)
                     </button>
                 </footer>
             </div>

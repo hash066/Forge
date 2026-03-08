@@ -13,9 +13,8 @@ export class DriftDetector {
         // 1. Check for Unauthorized Technologies
         // This is a simple mock implementation using keywords
         blueprint.components.forEach(component => {
-            // For example, if the blueprint says 'PostgreSQL' but the code uses 'MongoDB'
-            if (fileName.includes('db') || fileName.includes('repository')) {
-                if (code.includes('mongoose') || code.includes('mongodb')) {
+            // Check universally for database drift
+            if (code.includes('mongoose') || code.includes('mongodb')) {
                     const tech = component.technology.toLowerCase();
                     if (!tech.includes('mongo')) {
                         violations.push({
@@ -25,7 +24,6 @@ export class DriftDetector {
                             fix: `Migrate to ${component.technology} or update the Blueprint`
                         });
                     }
-                }
             }
         });
 
@@ -53,7 +51,7 @@ export class DriftDetector {
         }
 
         // 4. ML Pipeline Validator (Stub)
-        if (fileName.endsWith('.py') && code.includes('train_test_split')) {
+        if (code.includes('train_test_split')) {
             if (code.includes('StandardScaler') && code.indexOf('StandardScaler') < code.indexOf('train_test_split')) {
                 violations.push({
                     type: 'vulnerability',

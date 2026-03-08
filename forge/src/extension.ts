@@ -15,7 +15,6 @@ import { ArgueMode } from './extension/argueMode';
 import { Violation } from './shared/types';
 
 let leftPanelProvider: DevForgeWebviewProvider;
-let rightPanelProvider: DevForgeWebviewProvider;
 let outputChannel: vscode.OutputChannel;
 
 export async function activate(context: vscode.ExtensionContext) {
@@ -35,25 +34,18 @@ export async function activate(context: vscode.ExtensionContext) {
     const scalePredictor = new ScalePredictor();
     const argueMode = new ArgueMode();
 
-    // Register Webview Providers immediately
+    // Register Webview Provider
     leftPanelProvider = new DevForgeWebviewProvider(
         context.extensionUri,
         'leftPanel',
         apiClient,
         blueprintManager,
+        argueMode,
         skillTracker
-    );
-
-    rightPanelProvider = new DevForgeWebviewProvider(
-        context.extensionUri,
-        'rightPanel',
-        apiClient,
-        blueprintManager
     );
 
     context.subscriptions.push(
         vscode.window.registerWebviewViewProvider('devforge-left-panel', leftPanelProvider),
-        vscode.window.registerWebviewViewProvider('devforge-right-panel', rightPanelProvider),
         statusBarManager
     );
 
@@ -68,11 +60,25 @@ export async function activate(context: vscode.ExtensionContext) {
         });
     }
 
+    let analysisTimeout: NodeJS.Timeout | null = null;
+    let activeAbortController: AbortController | null = null;
+
     // Analysis Logic
     const runAnalysis = async (doc: vscode.TextDocument) => {
         if (doc.uri.scheme !== 'file') {
             return;
         }
+
+        if (analysisTimeout) {
+            clearTimeout(analysisTimeout);
+        }
+
+        analysisTimeout = setTimeout(async () => {
+            if (activeAbortController) {
+                activeAbortController.abort();
+            }
+            activeAbortController = new AbortController();
+            const signal = activeAbortController.signal;
 
         statusBarManager.setLoading(true);
         leftPanelProvider.postMessage({ type: 'setLoading', value: true });
@@ -101,6 +107,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
             // 2. Production API Scans
             try {
+                if (signal.aborted) return;
                 const [apiAnal, driftAnal, secAnal, riskAnal, costAnal, patAnal] = await Promise.all([
                     apiClient.analyzeCode(code, doc.languageId),
                     apiClient.detectDrift(finalBlueprint, code, fileName),
@@ -109,6 +116,8 @@ export async function activate(context: vscode.ExtensionContext) {
                     apiClient.estimateCost(finalBlueprint.components.map(c => c.id)),
                     apiClient.detectPatterns(code, doc.languageId)
                 ]);
+                
+                if (signal.aborted) return;
 
                 apiViolations = apiAnal;
                 driftViolations = driftAnal;
@@ -117,7 +126,9 @@ export async function activate(context: vscode.ExtensionContext) {
                 finalCost = costAnal || localCostEstimate;
                 patterns = patAnal.patterns;
                 scaleTimeline = await apiClient.predictScale(finalBlueprint, finalBlueprint.constraints.currentUsers || 1000);
+                if (signal.aborted) return;
             } catch (apiError) {
+                if (signal.aborted) return;
                 console.error('Production API Error:', apiError);
                 // Fallback to local scans only, no fake data
                 driftViolations = driftDetector.detectDrift(finalBlueprint, code, fileName);
@@ -132,36 +143,36 @@ export async function activate(context: vscode.ExtensionContext) {
                 fix: t.issues[0]?.recommendation || 'Scale resources'
             })) : scalePredictor.predictFailurePoints(finalBlueprint);
 
-            // 3. System Critique
-            if (detectedServices.length > 0) {
-                const challenge = argueMode.generateChallenge(detectedServices[0].name);
-                rightPanelProvider.postMessage({ type: 'triggerChallenge', value: challenge });
-            }
 
             // Update UI
-            leftPanelProvider.postMessage({
-                type: 'updateData',
-                violations: allViolations,
-                riskScores: riskScores,
-                costEstimate: finalCost,
-                hasBlueprint: hasBlueprint,
-                scaleFailures: scaleFailures,
-                patterns: patterns,
-                skills: skillTracker.getSkills(),
-                mode: mode // Send stored mode to UI
-            });
+            if (!signal.aborted) {
+                leftPanelProvider.postMessage({
+                    type: 'updateData',
+                    violations: allViolations,
+                    riskScores: riskScores,
+                    costEstimate: finalCost,
+                    hasBlueprint: hasBlueprint,
+                    scaleFailures: scaleFailures,
+                    patterns: patterns,
+                    skills: skillTracker.getSkills(),
+                    mode: mode, // Send stored mode to UI
+                    apiEndpoint: vscode.workspace.getConfiguration('devforge').get<string>('apiEndpoint') || 'https://ghwl6o43ch.execute-api.eu-north-1.amazonaws.com/dev'
+                });
 
-            // Update Status Bar
-            statusBarManager.updateRisk(riskScores);
-            statusBarManager.updateCost(finalCost);
-            statusBarManager.updateDrift(allViolations.length);
-
+                // Update Status Bar
+                statusBarManager.updateRisk(riskScores);
+                statusBarManager.updateCost(finalCost);
+                statusBarManager.updateDrift(allViolations.length);
+            }
         } catch (error) {
             console.error('System analysis failed:', error);
         } finally {
-            statusBarManager.setLoading(false);
-            leftPanelProvider.postMessage({ type: 'setLoading', value: false });
+            if (!signal?.aborted) {
+                statusBarManager.setLoading(false);
+                leftPanelProvider.postMessage({ type: 'setLoading', value: false });
+            }
         }
+        }, 300); // 300ms debounce
     };
 
     // Removed dynamic AI detection per user request
@@ -190,6 +201,9 @@ export async function activate(context: vscode.ExtensionContext) {
             await blueprintManager.saveBlueprint(blueprint);
             vscode.window.showInformationMessage('Created new DevForge blueprint in .devforge/architecture.json');
         }),
+        vscode.commands.registerCommand('devforge.openChat', () => {
+             leftPanelProvider.postMessage({ type: 'openChat' });
+        }),
         vscode.commands.registerCommand('devforge.getMode', () => {
             return context.globalState.get<string>('devforge_mode');
         })
@@ -209,6 +223,7 @@ class DevForgeWebviewProvider implements vscode.WebviewViewProvider {
         private readonly _bundleName: string,
         private readonly _apiClient: APIClient,
         private readonly _blueprintManager: BlueprintManager,
+        private readonly _argueMode: ArgueMode,
         private readonly _skillTracker?: SkillTracker
     ) {}
 
@@ -219,22 +234,22 @@ class DevForgeWebviewProvider implements vscode.WebviewViewProvider {
     ) {
         this._view = webviewView;
 
-        // Broaden localResourceRoots to ensure VS Code allows loading from both possible dist paths
-        const distPath = vscode.Uri.file(path.join(this._extensionUri.fsPath, 'dist'));
-        const subDistPath = vscode.Uri.file(path.join(this._extensionUri.fsPath, 'forge', 'dist'));
+        const extensionPath = this._extensionUri.fsPath;
+        const distPath = path.join(extensionPath, 'dist');
+        const forgeDistPath = path.join(extensionPath, 'forge', 'dist');
 
         webviewView.webview.options = {
             enableScripts: true,
             localResourceRoots: [
                 this._extensionUri,
-                distPath,
-                subDistPath
+                vscode.Uri.file(distPath),
+                vscode.Uri.file(forgeDistPath)
             ]
         };
 
         webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
-        webviewView.webview.onDidReceiveMessage(data => {
+        webviewView.webview.onDidReceiveMessage(async data => {
             switch (data.type) {
                 case 'onInfo':
                     if (data.value) {
@@ -249,6 +264,10 @@ class DevForgeWebviewProvider implements vscode.WebviewViewProvider {
                 case 'chatMessage':
                     this._handleChatMessage(data.value);
                     break;
+                case 'savePreferredModel':
+                    vscode.workspace.getConfiguration('devforge').update('preferredAiModel', data.value, vscode.ConfigurationTarget.Global);
+                    vscode.window.showInformationMessage(`Preferred AI Model set to ${data.value}`);
+                    break;
                 case 'generateBlueprint':
                     this._handleGenerateBlueprint(data.value);
                     break;
@@ -261,6 +280,11 @@ class DevForgeWebviewProvider implements vscode.WebviewViewProvider {
                 case 'autoFixSecurity':
                     this._handleAutoFixSecurity();
                     break;
+                case 'openUrl':
+                    if (data.url) {
+                        vscode.env.openExternal(vscode.Uri.parse(data.url));
+                    }
+                    break;
                 case 'quizResult':
                     if (this._skillTracker) {
                         const delta = data.correct ? 5 : -2;
@@ -268,10 +292,35 @@ class DevForgeWebviewProvider implements vscode.WebviewViewProvider {
                         this._sendInitialData(); // Refresh UI with new skill scores
                     }
                     break;
-                case 'justifyResult':
-                    // @ts-ignore
-                    const argueMode = new ArgueMode();
-                    const result = argueMode.scoreJustification(data.value);
+                case 'exportReport': {
+                    // Build a markdown report and open it in VS Code
+                    const wf = vscode.workspace.workspaceFolders?.[0];
+                    if (!wf) { vscode.window.showErrorMessage('No workspace open.'); break; }
+                    const doc = vscode.window.activeTextEditor?.document;
+                    const fileName = doc ? path.basename(doc.fileName) : 'codebase';
+                    const ts = new Date().toISOString().replace(/[:.]/g, '-');
+                    const reportPath = path.join(wf.uri.fsPath, `.devforge-report-${ts}.md`);
+                    const reportContent = data.content || '# DevForge Report\n\nNo content provided.';
+                    await vscode.workspace.fs.writeFile(
+                        vscode.Uri.file(reportPath),
+                        Buffer.from(reportContent, 'utf8')
+                    );
+                    const reportUri = vscode.Uri.file(reportPath);
+                    await vscode.commands.executeCommand('vscode.open', reportUri, {
+                        viewColumn: vscode.ViewColumn.Beside,
+                        preview: true
+                    });
+                    vscode.window.showInformationMessage(`Report exported to ${path.basename(reportPath)}`);
+                    break;
+                }
+                case 'generateReport': {
+                    // Trigger the chat view to show the architecture report
+                    // This posts back to the webview with a generate-report message
+                    this.postMessage({ type: 'showGenerateReport' });
+                    break;
+                }
+                case 'justifyResult': {
+                    const result = this._argueMode.scoreJustification(data.value);
                     
                     if (this._skillTracker) {
                         this._skillTracker.updateSkill('Decoupling', result.quality);
@@ -283,6 +332,7 @@ class DevForgeWebviewProvider implements vscode.WebviewViewProvider {
                         content: `**Critique:** ${result.critique}\n\n**Architectural Score:** ${result.quality}/10`
                     });
                     break;
+                }
             }
         });
 
@@ -316,16 +366,8 @@ class DevForgeWebviewProvider implements vscode.WebviewViewProvider {
         const hasBlueprint = !!blueprint;
         const finalBlueprint = blueprint || this._blueprintManager.createDefaultBlueprint();
         
-        let riskScores;
-        let costEstimate;
-
-        try {
-            riskScores = await this._apiClient.calculateRisk(finalBlueprint);
-            costEstimate = await this._apiClient.estimateCost(finalBlueprint.components.map(c => c.id));
-        } catch (e) {
-            riskScores = { security: 0.5, scalability: 0.5, cost: 0.5, overengineering: 0.5 };
-            costEstimate = 0;
-        }
+        let riskScores = { security: 0.5, scalability: 0.5, cost: 0.5, overengineering: 0.5 };
+        let costEstimate = 0;
         
         this.postMessage({
             type: 'updateData',
@@ -334,33 +376,30 @@ class DevForgeWebviewProvider implements vscode.WebviewViewProvider {
             violations: [],
             hasBlueprint: hasBlueprint,
             skills: this._skillTracker?.getSkills(),
-            mode: mode
+            mode: mode,
+            apiEndpoint: vscode.workspace.getConfiguration('devforge').get<string>('apiEndpoint') || 'https://ghwl6o43ch.execute-api.eu-north-1.amazonaws.com/dev'
         });
     }
 
     private async _handleStartInterviewPrep() {
         if (!this._view) return;
 
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            vscode.window.showErrorMessage('No active file to analyze for interview prep.');
+            return;
+        }
+
         vscode.window.showInformationMessage('Analyzing project architecture for Interview Prep...');
         
-        setTimeout(() => {
-            // Assessment based on structural analysis
-            const quiz = {
-                id: 'assessment-01',
-                question: 'Based on the connection between your Lambda functions and RDS, why should an RDS Proxy be implemented?',
-                options: [
-                    'Lambda cannot natively encrypt database connections',
-                    'Direct connections bypass the VPC security layer',
-                    'Lambda cold starts and connection pooling can overwhelm RDS connections',
-                    'RDS Proxy is required for cross-region data replication'
-                ],
-                correctIndex: 2,
-                explanation: 'At peak load, high Lambda concurrency will attempt to open many simultaneous connections, potentially exceeding RDS limits. RDS Proxy pools these connections for stability.',
-                codeSnippet: 'INFRASTRUCTURE_METRICS: Lambda(Concur) -> RDS(Conn_Pool)'
-            };
-            
-            this._view?.webview.postMessage({ type: 'triggerInterviewPrep', value: quiz });
-        }, 1500);
+        try {
+            const code = editor.document.getText();
+            const languageId = editor.document.languageId;
+            const quiz = await this._apiClient.generateQuiz(code, languageId);
+            this._view?.webview.postMessage({ type: 'triggerQuiz', quiz: quiz });
+        } catch (error) {
+            vscode.window.showErrorMessage('Failed to generate interview prep.');
+        }
     }
 
     private async _handleAutoFixSecurity() {
@@ -400,16 +439,65 @@ class DevForgeWebviewProvider implements vscode.WebviewViewProvider {
             return;
         }
 
-        setTimeout(() => {
-            let response = "I've analyzed your request. ";
-            if (userMessage.toLowerCase().includes('security')) {
-                response += "Based on your current blueprint, you should implement JWT-based auth and ensure all database ports are strictly firewalled.";
-            } else if (userMessage.toLowerCase().includes('scale')) {
-                response += "For global scale, I recommend deploying to at least 3 regions with an Azure Front Door or AWS CloudFront distribution.";
-            } else if (userMessage.toLowerCase().includes('cost')) {
-                response += "Your current architecture estimate is around $112/mo. Using spot instances could reduce this by up to 60%.";
+        try {
+            let geminiKey = vscode.workspace.getConfiguration('devforge').get<string>('geminiApiKey') || process.env.GEMINI_API_KEY;
+            let grokKey = vscode.workspace.getConfiguration('devforge').get<string>('grokApiKey') || process.env.GROK_API_KEY;
+
+            try {
+                // Resolve .env relative to extension root (one level up from forge/)
+                const possibleEnvPaths = [
+                    vscode.Uri.file(path.resolve(this._extensionUri.fsPath, '.env')),
+                    vscode.Uri.file(path.resolve(this._extensionUri.fsPath, '..', '.env')),
+                ];
+                for (const envPath of possibleEnvPaths) {
+                    try {
+                        const envData = await vscode.workspace.fs.readFile(envPath);
+                        const envContent = Buffer.from(envData).toString('utf8');
+                        // Split on actual newlines (not escaped \n)
+                        envContent.split(/\r?\n/).forEach((line: string) => {
+                            const eqIdx = line.indexOf('=');
+                            if (eqIdx < 1) return;
+                            const key = line.slice(0, eqIdx).trim();
+                            const val = line.slice(eqIdx + 1).trim().replace(/^"|"$/g, '').replace(/^'|'$/g, '');
+                            if (key === 'GEMINI_API_KEY' && val && !geminiKey) geminiKey = val;
+                            if (key === 'GROK_API_KEY' && val && !grokKey) grokKey = val;
+                        });
+                        break; // stop at first .env found
+                    } catch { /* path doesn't exist, try next */ }
+                }
+            } catch (e) {
+                // .env not found, proceed
+            }
+
+            // Auto-detect best model: prefer gemini if key available, else grok
+            let preferredModel = vscode.workspace.getConfiguration('devforge').get<string>('preferredAiModel') || 'auto';
+            
+            let response = "";
+
+            // If model is unset/auto/claude, pick the first available key
+            const effectiveModel = (preferredModel === 'auto' || preferredModel === 'claude')
+                ? (geminiKey ? 'gemini' : grokKey ? 'grok' : preferredModel)
+                : preferredModel;
+
+            if (effectiveModel === 'gemini') {
+                if (!geminiKey) throw new Error('Gemini API key not found');
+                const { GoogleGenerativeAI } = require('@google/generative-ai');
+                const genAI = new GoogleGenerativeAI(geminiKey);
+                // The UI says "Gemini 2.0 Flash"
+                const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+                const result = await model.generateContent(userMessage);
+                response = result.response.text();
+            } else if (effectiveModel === 'grok') {
+                if (!grokKey) throw new Error('Grok API key not found');
+                const OpenAI = require('openai');
+                const openai = new OpenAI({ apiKey: grokKey, baseURL: "https://api.x.ai/v1" });
+                const completion = await openai.chat.completions.create({
+                    model: "grok-2-latest",
+                    messages: [{ role: "user", content: userMessage }]
+                });
+                response = completion.choices[0].message.content || 'No response from Grok';
             } else {
-                response += "That's an interesting architectural decision. Have you considered how this will affect your system's overall latency?";
+                throw new Error('No API key found. Add GEMINI_API_KEY or GROK_API_KEY to your .env file, or configure them in DevForge settings.');
             }
 
             this.postMessage({
@@ -417,7 +505,13 @@ class DevForgeWebviewProvider implements vscode.WebviewViewProvider {
                 sender: 'ai',
                 content: response
             });
-        }, 1500);
+        } catch (error: any) {
+            this.postMessage({
+                type: 'addMessage',
+                sender: 'ai',
+                content: `Error generating response: ${error.message}`
+            });
+        }
     }
 
     private _getHtmlForWebview(webview: vscode.Webview) {
@@ -447,7 +541,7 @@ class DevForgeWebviewProvider implements vscode.WebviewViewProvider {
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} https:; script-src 'unsafe-eval' ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline';">
+                <meta http-equiv="Content-Security-Policy" content="default-src 'none'; connect-src https:; img-src ${webview.cspSource} https:; script-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline';">
             </head>
             <body style="background-color: #020617; color: white;">
                 <div id="root">
@@ -491,24 +585,6 @@ async function showOnboardingModal(context: vscode.ExtensionContext): Promise<st
     }
 
     return selection?.value;
-}
-
-async function showQuickTutorial(mode: string) {
-    const tutorialSteps = mode === 'student' 
-        ? [
-            'DevForge will analyze your code as you write',
-            'Track your architecting skills in the left panel',
-            'Click "Start Interview Prep" to test your knowledge'
-          ]
-        : [
-            'DevForge monitors your code against architecture blueprints',
-            'Real-time cost estimates appear in the status bar',
-            'Security gates will block risky deployments'
-          ];
-    
-    for (const step of tutorialSteps) {
-        await vscode.window.showInformationMessage(step);
-    }
 }
 
 

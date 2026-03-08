@@ -1,15 +1,36 @@
 import * as assert from 'assert';
-
-// You can import and use all API from the 'vscode' module
-// as well as import your extension to test it
 import * as vscode from 'vscode';
-// import * as myExtension from '../../extension';
+import { SecurityScanner } from '../extension/securityScanner';
+import { DriftDetector } from '../extension/driftDetector';
+import { CostCalculator } from '../extension/costCalculator';
 
-suite('Extension Test Suite', () => {
-	vscode.window.showInformationMessage('Start all tests.');
+suite('DevForge Extension Analyzers Test Suite', () => {
+    vscode.window.showInformationMessage('Start DevForge tests.');
 
-	test('Sample test', () => {
-		assert.strictEqual(-1, [1, 2, 3].indexOf(5));
-		assert.strictEqual(-1, [1, 2, 3].indexOf(0));
-	});
+    test('SecurityScanner: detect SQL injection and secrets', () => {
+        const scanner = new SecurityScanner();
+        const code = `
+            const token="api_key=XYZ1234567890ABCDEFGH"
+            const query = "SELECT * FROM users WHERE id=" + req.body.id;
+        `;
+        const violations = scanner.runSecurityScan(code, 'test.ts');
+        assert.strictEqual(violations.length, 2);
+        assert.strictEqual(violations.some(v => v.type === 'vulnerability'), true);
+        assert.strictEqual(violations.some(v => v.type === 'security'), true);
+    });
+
+    test('DriftDetector: detect unauthorized dependency', () => {
+        const detector = new DriftDetector();
+        const blueprint: any = { components: [] };
+        const code = `import AWS from 'aws-sdk';`;
+        const violations = detector.detectDrift(blueprint, code, 'test.ts');
+        assert.strictEqual(violations.length, 1);
+        assert.strictEqual(violations[0].type, 'security');
+    });
+
+    test('CostCalculator: calculates correct cost bounds', () => {
+        const calc = new CostCalculator();
+        const cost = calc.calculateMonthlyCost(['rds', 'ec2']);
+        assert.ok(cost > 0 && cost < 200);
+    });
 });

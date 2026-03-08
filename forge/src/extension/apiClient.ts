@@ -1,8 +1,14 @@
 import { Blueprint, RiskScores, Violation, Constraints } from '../shared/types';
 
+import * as vscode from 'vscode';
+
 export class APIClient {
-    private infraApiBase = 'https://1plv9rmbhb.execute-api.eu-north-1.amazonaws.com/dev';
-    private devforgeApiBase = 'https://ghwl6o43ch.execute-api.eu-north-1.amazonaws.com/dev';
+    private get infraApiBase() {
+        return vscode.workspace.getConfiguration('devforge').get<string>('infraApiEndpoint') || 'https://1plv9rmbhb.execute-api.eu-north-1.amazonaws.com/dev';
+    }
+    private get devforgeApiBase() {
+        return vscode.workspace.getConfiguration('devforge').get<string>('apiEndpoint') || 'https://ghwl6o43ch.execute-api.eu-north-1.amazonaws.com/dev';
+    }
 
     public async checkHealth(): Promise<boolean> {
         try {
@@ -81,28 +87,35 @@ export class APIClient {
     }
 
     public async predictScale(architecture: any, currentUsers: number): Promise<any> {
-        // This would call the /predict-scale endpoint
-        // For now, it returns a realistic mock matching the Lambda logic
-        const dbCapacity = 1000; // Mock for db.t3.micro
+        try {
+            const res = await fetch(`${this.infraApiBase}/predict-scale`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ architecture, current_users: currentUsers })
+            });
+            if (res.ok) return await res.json();
+        } catch (e) {
+            console.error('API /predict-scale failed.', e);
+        }
         return {
             current_users: currentUsers,
-            timeline: [
-                { user_count: currentUsers, status: 'healthy', health_score: 100, issues: [] },
-                { user_count: dbCapacity * 0.8, status: 'degraded', health_score: 60, issues: [{ component: 'database', severity: 'warning', description: 'Database connection pool at 80% capacity', recommendation: 'Consider adding read replicas' }] },
-                { user_count: dbCapacity, status: 'critical', health_score: 20, issues: [{ component: 'database', severity: 'critical', description: 'Database connection pool exhausted', recommendation: 'Immediate action: Add read replicas or increase connection limit', estimated_cost: '+$50/month for read replica' }] }
-            ],
-            summary: {
-                first_failure_at: dbCapacity,
-                failure_component: 'database',
-                action_required: true,
-                recommendation: 'Immediate action: Add read replicas or increase connection limit'
-            },
+            timeline: [],
+            summary: { action_required: false },
             timestamp: new Date().toISOString()
         };
     }
 
     public async generateQuiz(code: string, language: string): Promise<any> {
-        // This would call the /quiz/generate endpoint
+        try {
+            const res = await fetch(`${this.devforgeApiBase}/generate-quiz`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code, language })
+            });
+            if (res.ok) return await res.json();
+        } catch (e) {
+            console.error('API /generate-quiz failed.', e);
+        }
         return {
             question: "Why is the current database connection pattern problematic for scaling?",
             options: [

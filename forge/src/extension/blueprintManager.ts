@@ -17,41 +17,41 @@ export class BlueprintManager {
         return path.join(this.workspaceRoot, '.devforge', 'architecture.json');
     }
 
-    private ensureDirectory(): void {
-        const workspaceRoot = vscode.workspace.workspaceFolders?.[0].uri.fsPath;
-        if (!workspaceRoot) {
+    private async ensureDirectory(): Promise<void> {
+        if (!this.workspaceRoot) {
             return;
         }
-        const dir = path.join(workspaceRoot, '.devforge');
-        if (!fs.existsSync(dir)) {
-            fs.mkdirSync(dir, { recursive: true });
+        const dir = path.join(this.workspaceRoot, '.devforge');
+        try {
+            await fs.promises.mkdir(dir, { recursive: true });
+        } catch (e) {
+            // ignore if exists
         }
     }
 
     public async loadBlueprint(): Promise<Blueprint | undefined> {
         const filePath = this.getFilePath();
-        if (!filePath || !fs.existsSync(filePath)) {
+        if (!filePath) {
             return undefined;
         }
 
         try {
-            const data = fs.readFileSync(filePath, 'utf8');
+            const data = await fs.promises.readFile(filePath, 'utf8');
             return JSON.parse(data) as Blueprint;
         } catch (error) {
-            console.error('Failed to load blueprint:', error);
             return undefined;
         }
     }
 
     public async saveBlueprint(blueprint: Blueprint): Promise<void> {
-        this.ensureDirectory();
+        await this.ensureDirectory();
         const filePath = this.getFilePath();
         if (!filePath) {
             return;
         }
 
         try {
-            fs.writeFileSync(filePath, JSON.stringify(blueprint, null, 2), 'utf8');
+            await fs.promises.writeFile(filePath, JSON.stringify(blueprint, null, 2), 'utf8');
         } catch (error) {
             console.error('Failed to save blueprint:', error);
         }

@@ -11,10 +11,6 @@ export class FileWatcher {
             onFileChange(doc);
         }, null, subscriptions);
 
-        // Also watch for text changes (debounced or on blur might be better for performance, but save is a good trigger)
-        vscode.workspace.onDidChangeTextDocument((event) => {
-            // We could analyze on every change, but for now let's stick to simple triggers
-        }, null, subscriptions);
 
         this.disposable = vscode.Disposable.from(...subscriptions);
     }

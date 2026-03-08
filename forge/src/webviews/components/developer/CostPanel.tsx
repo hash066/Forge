@@ -3,9 +3,10 @@ import { DollarSign, Lightbulb } from 'lucide-react';
 
 interface CostPanelProps {
     costEstimate: number;
+    onAction: (action: string, value?: any) => void;
 }
 
-export const CostPanel: React.FC<CostPanelProps> = ({ costEstimate }) => {
+export const CostPanel: React.FC<CostPanelProps> = ({ costEstimate, onAction }) => {
     const budget = 100;
     const percentUsed = Math.min(100, Math.round((costEstimate / budget) * 100));
     
@@ -80,7 +81,10 @@ export const CostPanel: React.FC<CostPanelProps> = ({ costEstimate }) => {
                 <button className="flex-1 py-2 bg-btn-bg hover:bg-btn-hover text-btn-fg text-[9px] font-black uppercase border border-border tracking-widest transition-all">
                     Configure Alert
                 </button>
-                <button className="flex-1 py-1.5 border border-border hover:bg-header/10 text-fg/40 text-[9px] font-black uppercase tracking-widest transition-all">
+                <button
+                    onClick={() => onAction('generateReport')}
+                    className="flex-1 py-1.5 border border-border hover:bg-header/10 text-fg/40 hover:text-fg text-[9px] font-black uppercase tracking-widest transition-all"
+                >
                     Generate Report
                 </button>
             </div>

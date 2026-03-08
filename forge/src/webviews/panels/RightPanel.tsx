@@ -10,8 +10,7 @@ import MessageBubble from '../components/MessageBubble';
 import JustificationModal from '../components/JustificationModal';
 import '../styles.css';
 
-// @ts-ignore
-const vscode = acquireVsCodeApi();
+import { vscode } from '../vscodeApi';
 
 interface Message {
     id: string;

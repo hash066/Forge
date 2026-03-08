@@ -12,6 +12,7 @@ interface ArchitectureDiagramProps {
     code?: string;
     language?: string;
     isDemo?: boolean;
+    apiUrl?: string;
 }
 
 const FALLBACK_NODES: Node[] = [
@@ -20,7 +21,7 @@ const FALLBACK_NODES: Node[] = [
 
 const FALLBACK_EDGES: Edge[] = [];
 
-export function ArchitectureDiagram({ code, language, isDemo = false }: ArchitectureDiagramProps) {
+export function ArchitectureDiagram({ code, language, isDemo = false, apiUrl = 'https://ghwl6o43ch.execute-api.eu-north-1.amazonaws.com/dev' }: ArchitectureDiagramProps) {
     const [nodes, setNodes] = useState<Node[]>([]);
     const [edges, setEdges] = useState<Edge[]>([]);
     const [loading, setLoading] = useState(false);
@@ -39,7 +40,6 @@ export function ArchitectureDiagram({ code, language, isDemo = false }: Architec
         setLoading(true);
 
         try {
-            const apiUrl = getApiUrl();
             const response = await fetch(`${apiUrl}/diagram`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -115,6 +115,3 @@ function getNodeStyle() {
     };
 }
 
-function getApiUrl(): string {
-    return 'https://ghwl6o43ch.execute-api.eu-north-1.amazonaws.com/dev'; // System API Endpoint
-}

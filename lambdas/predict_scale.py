@@ -80,7 +80,12 @@ def lambda_handler(event, context):
         })
         
         # Sort timeline
-        timeline = sorted(timeline, key=lambda x: x['user_count'])
+        timeline = sorted(timeline, key=lambda x: (x['user_count'], x['health_score']))
+        deduped_timeline = []
+        for t in timeline:
+            if not deduped_timeline or deduped_timeline[-1]['user_count'] != t['user_count']:
+                deduped_timeline.append(t)
+        timeline = deduped_timeline
         
         return {
             'statusCode': 200,

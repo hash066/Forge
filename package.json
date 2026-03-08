@@ -31,7 +31,7 @@
         {
           "id": "devforge-sidebar",
           "title": "DevForge",
-          "icon": "$(rocket)"
+          "icon": "forge/media/rocket.svg"
         }
       ]
     },
@@ -40,14 +40,7 @@
         {
           "type": "webview",
           "id": "devforge-left-panel",
-          "name": "Explorer",
-          "icon": "$(search)"
-        },
-        {
-          "type": "webview",
-          "id": "devforge-right-panel",
-          "name": "Dashboard",
-          "icon": "$(dashboard)"
+          "name": "DevForge"
         }
       ]
     },
@@ -58,12 +51,32 @@
           "type": "string",
           "default": "https://api.devforge.com",
           "description": "API Endpoint URL for DevForge services."
+        },
+        "devforge.preferredAiModel": {
+          "type": "string",
+          "enum": [
+            "claude",
+            "gemini",
+            "grok"
+          ],
+          "default": "claude",
+          "description": "The AI model to use for architecture assistance."
+        },
+        "devforge.geminiApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API Key for Google Gemini."
+        },
+        "devforge.grokApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API Key for xAI Grok."
         }
       }
     }
   },
   "scripts": {
-    "compile": "webpack",
+    "compile": "webpack && cd forge && node esbuild.js",
     "watch": "webpack --watch"
   },
   "dependencies": {
@@ -74,6 +87,7 @@
     "lucide-react": "^0.577.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "reactflow": "^11.11.4",
     "recharts": "^3.8.0",
     "tree-sitter": "^0.25.0",
     "tree-sitter-javascript": "^0.25.0",
