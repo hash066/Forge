@@ -3,8 +3,13 @@
   "displayName": "Forge",
   "description": "Architecture-first AI IDE extension",
   "version": "0.0.1",
+  "publisher": "devforge",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/devforge/devforge"
+  },
   "engines": {
-    "vscode": "^1.107.0"
+    "vscode": "^1.109.0"
   },
   "categories": [
     "Other"

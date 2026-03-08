@@ -1,10 +1,31 @@
 {
   "name": "devforge",
   "displayName": "DevForge",
+  "description": "Architecture-first AI IDE extension — real-time security scanning, drift detection, pattern analysis, cost estimation, and AI-powered mentorship.",
   "version": "0.1.0",
   "publisher": "devforge",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sammy-20-wqz/architecture-first-ide-kiro"
+  },
+  "homepage": "https://github.com/sammy-20-wqz/architecture-first-ide-kiro#readme",
+  "categories": [
+    "Other",
+    "Linters",
+    "Education",
+    "Machine Learning"
+  ],
+  "keywords": [
+    "architecture",
+    "ai",
+    "security",
+    "code analysis",
+    "developer tools"
+  ],
+  "icon": "forge/media/rocket.svg",
   "engines": {
-    "vscode": "^1.107.0"
+    "vscode": "^1.80.0"
   },
   "main": "./forge/dist/extension.js",
   "activationEvents": [],

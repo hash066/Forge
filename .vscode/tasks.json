@@ -1,0 +1,67 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "npm: compile",
+			"type": "npm",
+			"script": "compile",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "watch-all",
+			"dependsOn": [
+				"npm: watch-webviews",
+				"npm: watch-extension-logic"
+			]
+		},
+		{
+			"type": "npm",
+			"script": "watch",
+			"label": "npm: watch-webviews",
+			"isBackground": true,
+			"problemMatcher": {
+				"owner": "webpack",
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": ".*compiling.*",
+					"endsPattern": ".*compiled.*"
+				},
+				"pattern": [
+					{
+						"regexp": "^.*$",
+						"file": 1,
+						"location": 2,
+						"message": 3
+					}
+				]
+			}
+		},
+		{
+			"label": "npm: watch-extension-logic",
+			"type": "npm",
+			"script": "watch",
+			"path": "forge",
+			"isBackground": true,
+			"problemMatcher": "$esbuild-watch"
+		}
+	],
+	"problemMatchers": [
+		{
+			"name": "esbuild-watch",
+			"owner": "esbuild",
+			"background": {
+				"activeOnStart": true,
+				"beginsPattern": "^\\[watch\\] build started",
+				"endsPattern": "^\\[watch\\] build finished"
+			},
+			"pattern": {
+				"regexp": "^✘ \\[ERROR\\] (.*)$",
+				"message": 1
+			}
+		}
+	]
+}

@@ -169,7 +169,49 @@ devforge/
 
 ## 🚀 Getting Started
 
-### Prerequisites
+### Installation from VSIX (For Judges & Evaluators)
+
+This extension is packaged as a VSIX file for easy installation without the Visual Studio Marketplace.
+
+**Installation Steps:**
+
+1. **Download** the VSIX file from the `release/` folder in this repository:
+   - `devforge-extension-0.0.1.vsix`
+
+2. **Open VS Code**
+
+3. **Go to Extensions panel** (Ctrl+Shift+X / Cmd+Shift+X)
+
+4. **Click the three-dot menu** (⋯) at the top of the Extensions panel
+
+5. **Select "Install from VSIX"**
+
+6. **Choose the downloaded `devforge-extension-0.0.1.vsix` file**
+
+7. **Reload VS Code** when prompted
+
+The extension will now be installed and ready to use. Open `sample-project/index.js` to see it in action.
+
+---
+
+### 📋 Prototype Build Information
+
+This is the **prototype build of the DevForge extension** for evaluation purposes. The VSIX package includes:
+
+- Full VS Code extension with TypeScript source
+- React-based webview UI with Tailwind CSS
+- Real-time security scanning, drift detection, and cost analysis
+- AI-powered architecture copilot (Gemini 2.0 Flash / Grok-2)
+- Student learning mode with pattern detection and skill tracking
+- Pre-built demo project with sample code for testing all features
+
+**Version:** 0.0.1  
+**Publisher:** devforge  
+**Minimum VS Code:** 1.109.0
+
+---
+
+### Prerequisites (For Development)
 - Node.js 18+
 - VS Code 1.80+
 - Python 3.9+ (for Lambda local testing)
