@@ -6,7 +6,6 @@ node_modules/
 # Build outputs
 dist/
 forge/dist/
-*.vsix
 
 # Environment & secrets
 .env
