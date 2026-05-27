@@ -45,8 +45,18 @@ export class DevForgeExtension {
     // Load architecture definition from API (or use default fallback)
     await this.store.loadArchitectureDefinition(this.apiClient);
 
-    // Generate initial blueprint
-    const blueprint = await this.apiClient.generateBlueprint();
+    // Generate initial blueprint from default constraints (matches docx example payload).
+    const blueprint = await this.apiClient.generateBlueprint(
+      {
+        current_users: 1000,
+        projected_users: 10000,
+        budget: 150,
+        team_size: 3,
+        architecture_type: 'microservices',
+        domain: 'web',
+      },
+      'devforge-default',
+    );
     this.store.setBlueprint(blueprint);
 
     // Register Layer 1 panels

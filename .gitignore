@@ -6,6 +6,9 @@ dist
 .env.local
 .env.*.local
 
+# Local credentials / AWS console notes (DO NOT COMMIT)
+aws.txt
+
 # IDE
 .vscode
 .idea

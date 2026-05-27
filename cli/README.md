@@ -22,14 +22,22 @@ Create a config file at `~/.devforge/config.toml`:
 
 ```toml
 tenant_id = "your-tenant"
-api_url = "http://localhost:8000"
-api_key = "dev-local-key"
+# Local FastAPI control plane (dev):
+api_url   = "http://localhost:8000"
+# Or point straight at the AWS API Gateway (eu-north-1):
+# api_url = "https://ghwl6o43ch.execute-api.eu-north-1.amazonaws.com/dev"
+api_key   = "dev-local-key"
 ```
 
 Or use defaults for local development:
 - `tenant_id`: local-dev
 - `api_url`: http://localhost:8000
 - `api_key`: dev-local-key
+
+Production AWS endpoints (region `eu-north-1`):
+- `devforge-api`:   https://ghwl6o43ch.execute-api.eu-north-1.amazonaws.com/dev
+- `infra-ai-api`:   https://1plv9rmbhb.execute-api.eu-north-1.amazonaws.com/dev
+- `devforge-realtime` (WSS): wss://6fhd8botk8.execute-api.eu-north-1.amazonaws.com/dev/
 
 ## Usage
 
