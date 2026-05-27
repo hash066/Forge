@@ -1,0 +1,14 @@
+{
+  "name": "@devforge/cli",
+  "version": "0.1.0",
+  "private": true,
+  "description": "DevForge Rust CLI — `devforge wtf` and friends. Wrapped in package.json so Turborepo orchestrates it alongside JS packages.",
+  "scripts": {
+    "dev": "cargo run -- --help",
+    "build": "cargo build --release",
+    "lint": "cargo clippy -- -D warnings",
+    "typecheck": "cargo check",
+    "test": "cargo test",
+    "clean": "cargo clean"
+  }
+}

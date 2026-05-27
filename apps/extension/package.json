@@ -1,0 +1,105 @@
+{
+  "name": "devforge-vscode",
+  "displayName": "DevForge — Architecture-first AI",
+  "description": "Real-time drift detection, AWS cost guardrails, security gates, and a mentor that asks the right questions.",
+  "version": "0.1.0",
+  "publisher": "devforge",
+  "private": true,
+  "license": "UNLICENSED",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["AI", "Linters", "Other"],
+  "keywords": ["architecture", "ai", "aws", "cost", "drift", "security", "mentor"],
+  "main": "./dist/extension.js",
+  "activationEvents": ["onStartupFinished"],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "devforge",
+          "title": "DevForge",
+          "icon": "media/icon-sidebar.svg"
+        }
+      ]
+    },
+    "views": {
+      "devforge": [
+        {
+          "id": "devforge.dashboard",
+          "name": "Architecture",
+          "type": "webview"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "devforge.analyzeFile",
+        "title": "DevForge: Analyze Current File",
+        "category": "DevForge"
+      },
+      {
+        "command": "devforge.openDashboard",
+        "title": "DevForge: Open Dashboard",
+        "category": "DevForge"
+      },
+      {
+        "command": "devforge.setApiUrl",
+        "title": "DevForge: Set API URL",
+        "category": "DevForge"
+      }
+    ],
+    "configuration": {
+      "title": "DevForge",
+      "properties": {
+        "devforge.apiUrl": {
+          "type": "string",
+          "default": "http://localhost:8000",
+          "description": "URL of the DevForge control plane."
+        },
+        "devforge.apiKey": {
+          "type": "string",
+          "default": "dev-local-key",
+          "description": "API key for the control plane (X-API-Key header)."
+        },
+        "devforge.tenantId": {
+          "type": "string",
+          "default": "local-dev",
+          "description": "Tenant identifier sent on every request."
+        },
+        "devforge.mode": {
+          "type": "string",
+          "enum": ["student", "developer"],
+          "default": "developer",
+          "description": "Affects panel content and mentor prompt style."
+        },
+        "devforge.autoAnalyzeOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run security + risk analysis automatically when files are saved."
+        },
+        "devforge.budgetMonthlyUsd": {
+          "type": "number",
+          "default": 100,
+          "description": "Monthly AWS budget used to color the cost ticker."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "pnpm run build",
+    "build": "node esbuild.mjs --production",
+    "dev": "node esbuild.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo 'lint: ok'",
+    "package": "vsce package --no-dependencies --out devforge-vscode.vsix",
+    "clean": "rm -rf dist devforge-vscode.vsix"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.2.1",
+    "esbuild": "^0.24.2",
+    "typescript": "^5.7.2"
+  }
+}

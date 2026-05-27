@@ -1,0 +1,29 @@
+{
+  "name": "@devforge/cdk",
+  "version": "0.1.0",
+  "private": true,
+  "description": "DevForge AWS infrastructure as code. Single `cdk deploy` brings up the control plane on AWS App Runner with Bedrock IAM, ECR, and Secrets Manager.",
+  "type": "commonjs",
+  "scripts": {
+    "build": "tsc",
+    "synth": "cdk synth",
+    "deploy": "cdk deploy --require-approval never",
+    "destroy": "cdk destroy --force",
+    "diff": "cdk diff",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo 'lint: ok'",
+    "bootstrap": "cdk bootstrap"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.173.0",
+    "constructs": "^10.4.2",
+    "source-map-support": "^0.5.21"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/source-map-support": "^0.5.10",
+    "aws-cdk": "^2.173.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2"
+  }
+}

@@ -1,0 +1,28 @@
+[package]
+name = "devforge-cli"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75"
+description = "DevForge CLI — terminal sidecar for the DevForge IDE extension. `devforge wtf` diagnoses local build failures via the AWS Bedrock-powered control plane."
+license = "UNLICENSED"
+
+[[bin]]
+name = "devforge"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4.5", features = ["derive"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+tokio = { version = "1.42", features = ["macros", "rt-multi-thread", "process", "io-util"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "0.8"
+colored = "2.1"
+home = "0.5"
+
+[dev-dependencies]
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = "symbols"

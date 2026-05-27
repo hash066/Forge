@@ -1,7 +1,17 @@
+# Dependencies
 node_modules
-dist
+.pnpm-store
 
-# Environment variables (local configuration with secrets)
+# Build outputs
+dist
+build
+out
+.next
+.turbo
+cdk.out
+*.vsix
+
+# Environment variables
 .env
 .env.local
 .env.*.local
@@ -12,11 +22,18 @@ aws.txt
 # IDE
 .vscode
 .idea
+*.swp
 
 # Python
 __pycache__
 *.pyc
+*.pyo
 venv/
+.venv/
+*.egg-info
+.pytest_cache
+.mypy_cache
+.ruff_cache
 
 # Rust
 target/
@@ -25,9 +42,23 @@ Cargo.lock
 # OS
 .DS_Store
 Thumbs.db
+desktop.ini
 
 # Logs
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+
+# Test / coverage
+coverage
+.nyc_output
+
+# Misc
+*.tsbuildinfo
+.eslintcache
+.parcel-cache
+
+# Plan & memory artifacts (kept local, not committed)
+.claude

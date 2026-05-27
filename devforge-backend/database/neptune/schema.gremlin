@@ -1,6 +1,0 @@
-// Architecture Nodes
-g.addV('Component').property('id', 'SERVICE-001').property('name', 'AuthService').property('type', 'service')
-g.addV('Component').property('id', 'DB-001').property('name', 'UserDB').property('type', 'database')
-
-// Edges
-g.V().has('Component', 'id', 'SERVICE-001').addE('CONNECTS_TO').to(g.V().has('Component', 'id', 'DB-001'))

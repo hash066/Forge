@@ -1,0 +1,8 @@
+/**
+ * @devforge/ui styles entry point.
+ *
+ * Apps import this file ONCE alongside their own Tailwind entrypoint to pull
+ * in the design-token CSS variables. The Tailwind preset (`@devforge/tokens/
+ * tailwind-preset`) handles the rest.
+ */
+@import '@devforge/tokens/css/globals.css';

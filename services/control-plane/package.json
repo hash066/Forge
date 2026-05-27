@@ -1,0 +1,13 @@
+{
+  "name": "@devforge/control-plane",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Python FastAPI backend — wrapped in package.json so Turborepo can orchestrate it alongside JS apps.",
+  "scripts": {
+    "dev": "uvicorn app.main:app --reload --host 0.0.0.0 --port 8000",
+    "build": "echo 'python build: no-op'",
+    "lint": "ruff check app tests",
+    "typecheck": "mypy app",
+    "test": "pytest"
+  }
+}

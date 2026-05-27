@@ -1,0 +1,25 @@
+node_modules
+.next
+.turbo
+dist
+build
+coverage
+out
+*.lock
+*.lockb
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+bun.lockb
+
+# Legacy directories (to be deleted)
+devforge-backend
+rust-core
+infrastructure-k8s
+infrastructure-terraform
+"actual stuff"
+
+# Migration legacy paths (will be cleaned up after Phase 0 migration)
+frontend/dist
+backend/__pycache__
+cli/target

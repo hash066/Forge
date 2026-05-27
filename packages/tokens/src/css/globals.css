@@ -1,0 +1,147 @@
+/**
+ * DevForge global CSS — theme variables.
+ *
+ * Variables defined here power the entire color system. Tailwind preset reads
+ * these via `hsl(var(--token) / <alpha-value>)` syntax. Theme switching is
+ * therefore a class toggle on <html>, no rebuild required.
+ *
+ * Imported by apps via their own globals.css which contains the @tailwind
+ * directives. This file deliberately avoids @layer wrappers so it works in
+ * any consumer regardless of Tailwind setup order.
+ */
+
+:root {
+  /* Default = dark theme. Mirrored in [data-theme="dark"] for explicit selection. */
+  --bg-base: 230 10% 4%;
+  --bg-elevated: 232 10% 7%;
+  --bg-overlay: 232 12% 10%;
+  --surface-glass: 232 15% 12%;
+  --surface-grid: 0 0% 100%;
+
+  --fg-primary: 210 20% 98%;
+  --fg-secondary: 215 12% 75%;
+  --fg-tertiary: 215 10% 55%;
+  --fg-disabled: 215 8% 38%;
+
+  --border-subtle: 230 10% 16%;
+  --border-default: 230 10% 22%;
+  --border-strong: 230 12% 32%;
+
+  --brand-50: 15 100% 96%;
+  --brand-100: 15 100% 90%;
+  --brand-200: 14 100% 80%;
+  --brand-300: 13 100% 72%;
+  --brand-400: 12 100% 65%;
+  --brand-500: 10 100% 60%;
+  --brand-600: 6 100% 56%;
+  --brand-700: 3 95% 50%;
+  --brand-800: 0 90% 42%;
+  --brand-900: 0 80% 32%;
+
+  --magenta-500: 335 100% 65%;
+  --magenta-600: 335 95% 58%;
+
+  --verified-300: 152 80% 70%;
+  --verified-500: 152 80% 56%;
+  --verified-600: 152 75% 46%;
+  --verified-900: 152 60% 18%;
+
+  --ai-300: 256 95% 80%;
+  --ai-500: 256 88% 72%;
+  --ai-600: 256 80% 64%;
+  --ai-900: 256 50% 22%;
+
+  --warning-300: 38 95% 75%;
+  --warning-500: 38 92% 58%;
+  --warning-900: 32 75% 22%;
+
+  --critical-300: 0 90% 78%;
+  --critical-500: 0 84% 60%;
+  --critical-700: 0 80% 48%;
+  --critical-900: 0 65% 22%;
+
+  --info-500: 199 89% 60%;
+  --info-900: 210 70% 22%;
+
+  /* Radius — exposed for shadcn primitives that read --radius */
+  --radius: 0.75rem;
+}
+
+/* Explicit dark — identical to root; here for systems that toggle data-theme. */
+[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+/* Light theme overrides */
+[data-theme='light'],
+.light {
+  color-scheme: light;
+
+  --bg-base: 0 0% 100%;
+  --bg-elevated: 210 20% 98%;
+  --bg-overlay: 210 20% 95%;
+  --surface-glass: 0 0% 100%;
+  --surface-grid: 232 10% 0%;
+
+  --fg-primary: 232 18% 8%;
+  --fg-secondary: 230 12% 28%;
+  --fg-tertiary: 228 10% 45%;
+  --fg-disabled: 228 8% 65%;
+
+  --border-subtle: 220 14% 92%;
+  --border-default: 220 14% 86%;
+  --border-strong: 220 12% 70%;
+
+  --brand-500: 10 100% 56%;
+  --brand-600: 6 100% 50%;
+
+  --magenta-500: 335 95% 58%;
+  --magenta-600: 335 90% 50%;
+
+  --verified-500: 152 75% 36%;
+  --ai-500: 256 75% 50%;
+  --warning-500: 32 95% 44%;
+  --critical-500: 0 84% 48%;
+  --info-500: 199 89% 44%;
+}
+
+html,
+body {
+  background-color: hsl(var(--bg-base));
+  color: hsl(var(--fg-primary));
+  font-feature-settings: 'cv11', 'ss01', 'ss03';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Native selection — uses brand */
+::selection {
+  background-color: hsl(var(--brand-500) / 0.32);
+  color: hsl(var(--fg-primary));
+}
+
+/* Focus ring — token-driven, not browser default */
+:focus-visible {
+  outline: 2px solid hsl(var(--brand-500));
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Scrollbar — minimal, dark-mode native */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--border-strong));
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(var(--fg-tertiary));
+}
