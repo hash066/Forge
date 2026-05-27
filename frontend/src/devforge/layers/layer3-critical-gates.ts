@@ -4,14 +4,11 @@
  */
 
 import { ArchitectureStore } from '../store/architecture-store';
-import { MockDataService } from '../services/mock-data-service';
 
 export class CriticalGates {
-  private mockData: MockDataService;
+  private gateCheckInterval: NodeJS.Timeout | null = null;
 
-  constructor(private store: ArchitectureStore) {
-    this.mockData = new MockDataService();
-  }
+  constructor(private store: ArchitectureStore) {}
 
   /**
    * Register gates with Kiro
@@ -20,7 +17,7 @@ export class CriticalGates {
     console.log('🚪 Registering Layer 3 critical gates');
 
     // Simulate gate checks every 5 seconds
-    setInterval(() => {
+    this.gateCheckInterval = setInterval(() => {
       this.checkAllGates();
     }, 5000);
   }
@@ -30,32 +27,45 @@ export class CriticalGates {
    */
   unregisterGates(): void {
     console.log('🚪 Unregistering Layer 3 critical gates');
+    if (this.gateCheckInterval) {
+      clearInterval(this.gateCheckInterval);
+      this.gateCheckInterval = null;
+    }
   }
 
   /**
    * Check all gates
    */
   private checkAllGates(): void {
-    const mockCode = this.generateMockCode();
     const scores = this.store.getScores();
     const cost = this.store.getEstimatedCost();
-
-    // Check security gate
-    const securityGate = this.mockData.generateSecurityGateResult(mockCode);
-    if (securityGate.triggered) {
-      this.showSecurityGateModal(securityGate);
-    }
+    const budgetCap = this.store.getBudgetCap();
 
     // Check cost gate
-    const costGate = this.mockData.generateCostGateResult(cost, cost * 0.8);
-    if (costGate.triggered) {
-      this.showCostGateModal(costGate);
+    if (cost > budgetCap * 0.9) {
+      this.showCostGateModal({
+        triggered: true,
+        message: `Cost (${cost}) exceeds 90% of budget cap (${budgetCap})`,
+        suggestion: 'Review infrastructure configuration and optimize resource usage'
+      });
+    }
+
+    // Check security gate
+    if (scores.security > 70) {
+      this.showSecurityGateModal({
+        triggered: true,
+        message: `High security risk score: ${scores.security}`,
+        suggestion: 'Review authentication, authorization, and data protection mechanisms'
+      });
     }
 
     // Check deployment risk gate
-    const deploymentGate = this.mockData.generateDeploymentRiskGateResult(scores);
-    if (deploymentGate.triggered) {
-      this.showDeploymentRiskGateModal(deploymentGate);
+    if (scores.scalability > 70 || scores.overengineering > 70) {
+      this.showDeploymentRiskGateModal({
+        triggered: true,
+        message: `Deployment risk detected. Scalability: ${scores.scalability}, Overengineering: ${scores.overengineering}`,
+        suggestion: 'Verify infrastructure can support current load and optimize component architecture'
+      });
     }
   }
 

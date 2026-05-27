@@ -1,0 +1,55 @@
+{
+    "id": "test-blueprint",
+    "version": "1.0",
+    "created_at": "2024-01-15T10:00:00Z",
+    "constraints": {
+        "expected_scale": {
+            "current_users": 1000,
+            "projected_6mo": 10000,
+            "peak_load": 500
+        },
+        "budget_monthly": 100,
+        "team_size": 2,
+        "architecture_type": "modular_monolith",
+        "domain": "web"
+    },
+    "resources": [
+        {
+            "id": "sg-123",
+            "type": "security_group",
+            "name": "Web Security Group",
+            "properties": {
+                "ingress_rules": "10.0.0.0/8",
+                "vpc_id": "vpc-123"
+            },
+            "tags": {
+                "Environment": "production",
+                "Owner": "DevTeam"
+            }
+        },
+        {
+            "id": "db-main",
+            "type": "rds",
+            "name": "Primary Database",
+            "properties": {
+                "engine": "postgresql",
+                "instance_class": "db.t3.micro",
+                "publicly_accessible": false,
+                "encrypted": true
+            },
+            "tags": {
+                "Environment": "production",
+                "Owner": "DevTeam"
+            }
+        },
+        {
+            "id": "cache-main",
+            "type": "elasticache",
+            "name": "Redis Cache",
+            "properties": {
+                "engine": "redis",
+                "node_type": "cache.t3.micro"
+            }
+        }
+    ]
+}

@@ -146,6 +146,15 @@ Designed for professional engineering teams.
 10. **ML Pipeline Validator**: Validates machine learning workflows for data leakage and pipeline integrity.
 11. **Chaos Monkey Agent**: Proactively tests system resilience by simulating component failures.
 
+
+### Experimental / Future Roadmap
+
+18. **Architecture Time Machine**: Visualizes how the system's dependency graph has evolved over time (from git history), highlighting when specific technical debt was introduced.
+19. **Tech Debt Interest Tracker**: Quantifies "hacky" fixes by assigning an accumulating "interest rate" (time cost) that shows how much technical debt will slow down future features.
+20. **"What If" Scenario Simulator**: Allows developers to simulate swapping major components (e.g., "Postgres to DynamoDB") and visualize the code impact and breaking changes instantly.
+21. **Resume Achievement Unlocker**: Gamifies the coding experience by detecting professional milestones (e.g., "Implemented Thread-Safe Singleton," "Optimized Query by 50%") and formatting them for a developer's resume.
+22. **Green Computing Scorecard**: Estimates the carbon footprint and energy efficiency of the code/architecture, suggesting greener alternatives (e.g., "Polling is energy intensive; use WebSockets").
+
 ### Student Mode Features
 
 Focuses on learning, mentorship, and algorithmic mastery.

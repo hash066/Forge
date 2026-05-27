@@ -4,7 +4,7 @@
  */
 
 import { ArchitectureStore } from '../store/architecture-store';
-import { MockDataService } from '../services/mock-data-service';
+import { ApiClient } from '../services/api-client';
 import { DriftDetector } from './validators/drift-detector';
 import { ConstraintValidator } from './validators/constraint-validator';
 import { RiskScorer } from './validators/risk-scorer';
@@ -15,10 +15,11 @@ export class ValidationHooks {
   private riskScorer: RiskScorer;
   private lastValidationTime: number = 0;
   private validationDebounceMs: number = 500;
+  private simulationInterval: NodeJS.Timeout | null = null;
 
   constructor(
     private store: ArchitectureStore,
-    private mockData: MockDataService
+    private apiClient: ApiClient
   ) {
     this.driftDetector = new DriftDetector();
     this.constraintValidator = new ConstraintValidator();
@@ -41,6 +42,10 @@ export class ValidationHooks {
    */
   unregisterHooks(): void {
     console.log('🔗 Unregistering Layer 2 validation hooks');
+    if (this.simulationInterval) {
+      clearInterval(this.simulationInterval);
+      this.simulationInterval = null;
+    }
   }
 
   /**
@@ -48,7 +53,7 @@ export class ValidationHooks {
    */
   private simulateHookTriggers(): void {
     // Simulate code changes every 3 seconds
-    setInterval(() => {
+    this.simulationInterval = setInterval(() => {
       this.onCodeChange(this.generateMockCode());
     }, 3000);
   }

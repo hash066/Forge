@@ -3,6 +3,63 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "main": "./dist/extension.js",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "devforge.toggleOverlay",
+        "title": "DevForge: Toggle Overlay",
+        "category": "DevForge"
+      },
+      {
+        "command": "devforge.generateBlueprint",
+        "title": "DevForge: Generate Blueprint",
+        "category": "DevForge"
+      },
+      {
+        "command": "devforge.approveArchitecture",
+        "title": "DevForge: Approve Architecture",
+        "category": "DevForge"
+      }
+    ],
+    "views": {
+      "devforge-sidebar": [
+        {
+          "id": "devforge.riskPanel",
+          "name": "Risk Scores",
+          "type": "webview"
+        },
+        {
+          "id": "devforge.mentorConsole",
+          "name": "Mentor Console",
+          "type": "webview"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "devforge-sidebar",
+          "title": "DevForge",
+          "icon": "$(shield)"
+        }
+      ]
+    },
+    "statusBarItems": [
+      {
+        "id": "devforge.costTicker",
+        "name": "DevForge Cost Ticker",
+        "alignment": "right",
+        "priority": 100
+      }
+    ]
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
