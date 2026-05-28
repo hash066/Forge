@@ -28,7 +28,9 @@ class Settings(BaseSettings):
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
 
     # ── CORS ───────────────────────────────────────────────────────────────
-    allowed_origins: str = "http://localhost:3000"
+    # Dashboard runs on :3001, marketing on :3000 — allow both by default so the
+    # browser can hit the control plane out of the box (no .env required).
+    allowed_origins: str = "http://localhost:3000,http://localhost:3001"
 
     # ── Auth ───────────────────────────────────────────────────────────────
     clerk_publishable_key: str = ""

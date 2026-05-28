@@ -13,6 +13,7 @@ import {
 } from '@devforge/core';
 import { API_URL, CLUSTER_NAME, TENANT_ID } from '@/lib/config';
 import { BASELINE, SCENARIO } from '@/lib/scenario';
+import { toast } from '@/components/ui/toast';
 
 const EMPTY_STATS: IncidentStats = {
   total: 0,
@@ -208,6 +209,7 @@ export function useClusterFeed() {
   // detect → diagnose → heal cycle. The WebSocket feed animates the UI.
   const runDemo = useCallback(async () => {
     setState((s) => ({ ...s, demoRunning: true }));
+    toast.info('Injecting failures — watch DevForge detect, diagnose, and heal them.');
     const total = BASELINE.pods_total;
     const broken = SCENARIO.length;
     try {
@@ -277,6 +279,9 @@ export function useClusterFeed() {
           security_findings: findings,
         });
       }
+      toast.success('Cluster healed — back to 100%.');
+    } catch {
+      toast.error('Could not reach the control plane on :8000. Start it, then retry.');
     } finally {
       if (mounted.current) setState((s) => ({ ...s, demoRunning: false }));
     }
@@ -286,14 +291,19 @@ export function useClusterFeed() {
     async (incident: Incident) => {
       const plan = (incident.remediation ?? {}) as { action?: string; target?: string };
       const remId = remediationByIncident.current.get(incident.id);
-      await client.reportRemediation({
-        incident_id: incident.id,
-        remediation_id: remId,
-        action: plan.action,
-        target: plan.target,
-        status: 'applied',
-        detail: 'operator: approved from dashboard',
-      });
+      try {
+        await client.reportRemediation({
+          incident_id: incident.id,
+          remediation_id: remId,
+          action: plan.action,
+          target: plan.target,
+          status: 'applied',
+          detail: 'operator: approved from dashboard',
+        });
+        toast.success(`Approved — applying ${plan.action ?? 'fix'} to ${incident.name}.`);
+      } catch {
+        toast.error('Could not apply remediation — control plane unreachable.');
+      }
     },
     [client],
   );

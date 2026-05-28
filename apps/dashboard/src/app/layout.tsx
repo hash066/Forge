@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Fraunces, Hanken_Grotesk, JetBrains_Mono } from 'next/font/google';
+import { Toaster } from '@/components/ui/toast';
 import './globals.css';
 
 // Display serif — hero copy + big stat numbers
@@ -49,6 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <body className="min-h-screen bg-background font-sans text-foreground antialiased bg-app-grid">
         {children}
+        <Toaster />
       </body>
     </html>
   );
