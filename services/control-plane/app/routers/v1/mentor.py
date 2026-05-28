@@ -11,7 +11,7 @@ from pydantic import Field
 
 from app.deps import TenantContext, tenant_context
 from app.schemas.common import AnalysisMetadata, StrictModel
-from app.services.bedrock import BedrockError, get_bedrock_client
+from app.services.ai import AIProviderError, get_ai_provider
 from app.services.prompts import mentor_chat
 
 router = APIRouter(prefix="/mentor", tags=["mentor"])
@@ -40,7 +40,7 @@ async def chat(
     ctx: TenantContext = Depends(tenant_context),
 ) -> MentorResponse:
     start = time.perf_counter()
-    bedrock = get_bedrock_client()
+    provider = get_ai_provider()
     history_block = "\n".join(f"{m.role.upper()}: {m.content}" for m in payload.history[-10:])
     full_question = (
         f"{history_block}\n\nUSER: {payload.question}" if history_block else payload.question
@@ -49,8 +49,8 @@ async def chat(
     prompt = mentor_chat(question=full_question, mode=payload.mode, context=context_dict)
     try:
         # Higher temperature for chat — we want personality
-        result = await bedrock.invoke(prompt, temperature=0.6, max_tokens=1500)
-    except BedrockError as exc:
+        result = await provider.generate(prompt, temperature=0.6, max_tokens=1500)
+    except AIProviderError as exc:
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
     return MentorResponse(
         response=result.text,

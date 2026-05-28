@@ -1,0 +1,51 @@
+# DevForge OS Helm values.
+
+# ── AI ────────────────────────────────────────────────────────────────────────
+ai:
+  provider: openai # openai | bedrock | offline
+  openaiModel: gpt-5.5
+  # Provide your key here, or pre-create a secret and set existingSecret.
+  openaiApiKey: ""
+  existingSecret: "" # name of a secret with key OPENAI_API_KEY
+
+# ── Multi-tenancy ──────────────────────────────────────────────────────────────
+tenantId: default
+clusterName: production
+
+# ── Control plane ──────────────────────────────────────────────────────────────
+controlPlane:
+  enabled: true
+  image:
+    repository: devforge/control-plane
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicas: 1
+  service:
+    type: ClusterIP
+    port: 8000
+  # Default SQLite (ephemeral). Set to a Postgres DSN for production persistence.
+  databaseUrl: ""
+  allowedOrigins: "http://localhost:3001"
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { cpu: "1", memory: 512Mi }
+
+# ── Operator ───────────────────────────────────────────────────────────────────
+operator:
+  enabled: true
+  image:
+    repository: devforge/operator
+    tag: latest
+    pullPolicy: IfNotPresent
+  # auto = apply fixes automatically; suggest = propose only; off = observe
+  mode: suggest
+  maxRiskAuto: low
+  snapshotInterval: 30
+  excludedNamespaces: "kube-system,kube-public,kube-node-lease,devforge-system"
+  resources:
+    requests: { cpu: 50m, memory: 96Mi }
+    limits: { cpu: 300m, memory: 256Mi }
+
+# Install the default RemediationPolicy CR
+remediationPolicy:
+  create: true

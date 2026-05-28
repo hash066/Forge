@@ -42,10 +42,23 @@ class Settings(BaseSettings):
     # ── Cache ──────────────────────────────────────────────────────────────
     redis_url: str | None = None
 
-    # ── AWS ────────────────────────────────────────────────────────────────
-    aws_region: str = "eu-north-1"
+    # ── AI providers ─────────────────────────────────────────────────────────
+    # OpenAI is the default brain for DevForge OS. Bedrock/Claude stays swappable
+    # via `ai_provider=bedrock`; `offline` forces the deterministic stub.
+    ai_provider: Literal["openai", "bedrock", "offline"] = "openai"
+    openai_api_key: str = ""
+    openai_model: str = "gpt-5.5"
+    openai_base_url: str | None = None
+
+    # ── AWS (Bedrock fallback + pricing) ──────────────────────────────────────
+    aws_region: str = "ap-south-1"
     aws_bedrock_model_id: str = "anthropic.claude-sonnet-4-20250514-v1:0"
     s3_blueprint_bucket: str = "devforge-blueprints-dev"
+
+    # ── Kubernetes / DevForge OS ──────────────────────────────────────────────
+    # Default remediation posture for the operator when no RemediationPolicy CRD
+    # is present: suggest (propose, don't apply) is the safe enterprise default.
+    remediation_default_mode: Literal["auto", "suggest", "off"] = "suggest"
 
     # ── Rate limits ────────────────────────────────────────────────────────
     rate_limit_default: int = 60

@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from app.deps import TenantContext, tenant_context
 from app.schemas.analysis import DriftItem, DriftRequest, DriftResponse
 from app.schemas.common import AnalysisMetadata
-from app.services.bedrock import BedrockError, get_bedrock_client
+from app.services.ai import AIProviderError, get_ai_provider
 from app.services.prompts import SYSTEM_PROMPT, detect_drift
 
 router = APIRouter(prefix="/drift", tags=["analysis"])
@@ -22,13 +22,13 @@ async def check_drift(
     ctx: TenantContext = Depends(tenant_context),
 ) -> DriftResponse:
     start = time.perf_counter()
-    bedrock = get_bedrock_client()
+    provider = get_ai_provider()
     # Phase 1: pull blueprint from DB by id. For now we send what the caller provided.
     blueprint = {"id": payload.blueprint_id, "actual_resources": payload.actual_resources}
     prompt = detect_drift(blueprint=blueprint, actual_code=payload.code or "")
     try:
-        result = await bedrock.invoke(prompt, system=SYSTEM_PROMPT, temperature=0.1)
-    except BedrockError as exc:
+        result = await provider.generate(prompt, system=SYSTEM_PROMPT, temperature=0.1, json=True)
+    except AIProviderError as exc:
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
 
     parsed = result.json_payload or {}

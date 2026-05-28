@@ -26,6 +26,11 @@
     "views": {
       "devforge": [
         {
+          "id": "devforge.incidents",
+          "name": "Cluster Incidents",
+          "type": "tree"
+        },
+        {
           "id": "devforge.dashboard",
           "name": "Architecture",
           "type": "webview"
@@ -47,8 +52,34 @@
         "command": "devforge.setApiUrl",
         "title": "DevForge: Set API URL",
         "category": "DevForge"
+      },
+      {
+        "command": "devforge.refreshIncidents",
+        "title": "DevForge: Refresh Cluster Incidents",
+        "category": "DevForge",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "devforge.openClusterDashboard",
+        "title": "DevForge: Open Cluster Dashboard",
+        "category": "DevForge",
+        "icon": "$(dashboard)"
       }
     ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "devforge.refreshIncidents",
+          "when": "view == devforge.incidents",
+          "group": "navigation"
+        },
+        {
+          "command": "devforge.openClusterDashboard",
+          "when": "view == devforge.incidents",
+          "group": "navigation"
+        }
+      ]
+    },
     "configuration": {
       "title": "DevForge",
       "properties": {
@@ -82,6 +113,11 @@
           "type": "number",
           "default": 100,
           "description": "Monthly AWS budget used to color the cost ticker."
+        },
+        "devforge.dashboardUrl": {
+          "type": "string",
+          "default": "http://localhost:3001",
+          "description": "URL of the DevForge OS web dashboard (opened by 'Open Cluster Dashboard')."
         }
       }
     }

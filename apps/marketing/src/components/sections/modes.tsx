@@ -1,40 +1,40 @@
 'use client';
 import { Container, GlassCard, GradientText, Reveal, VerifiedBadge } from '@devforge/ui';
-import { Check, GraduationCap, Building2 } from 'lucide-react';
+import { Check, UserCheck, Rocket } from 'lucide-react';
 
 const MODES = [
   {
-    id: 'student',
-    icon: GraduationCap,
+    id: 'co-pilot',
+    icon: UserCheck,
     tone: 'ai' as const,
-    title: 'Student mode',
-    tagline: 'Learn architecture while you build it.',
+    title: 'Co-pilot mode',
+    tagline: 'DevForge diagnoses and proposes. You approve.',
     description:
-      'For interns, juniors, and bootcamp grads. Every AI-generated block triggers a comprehension check. Six skill dimensions tracked over time. LeetCode patterns surface in your own code so practice maps to your domain.',
+      'The safe default for production. Every incident gets a full GPT root-cause analysis and a concrete fix — but nothing changes until you click approve. Perfect for teams introducing autonomy gradually.',
     features: [
-      'Comprehension quiz after AI code generation',
-      'Skill radar across six dimensions',
-      'LeetCode pattern detection in your real code',
-      'Algorithmic improvement suggestions (O-class warnings)',
-      'Argue-with-me mode forces you to justify decisions',
-      'Anti-vibe critic flags non-idiomatic usage',
+      'Full root-cause + remediation shown before any action',
+      'One-click approve, straight from the dashboard or IDE',
+      'Nothing mutates the cluster without sign-off',
+      'Equivalent kubectl command shown for every fix',
+      'Ideal for regulated and high-stakes environments',
+      'Every proposal and approval is audit-logged',
     ],
   },
   {
-    id: 'developer',
-    icon: Building2,
+    id: 'autopilot',
+    icon: Rocket,
     tone: 'brand' as const,
-    title: 'Developer mode',
-    tagline: 'Architecture discipline for the people who deploy.',
+    title: 'Autopilot mode',
+    tagline: 'Low-risk incidents heal themselves.',
     description:
-      'For seniors, staff, and the teams behind production systems. Drift detection, cost guardrails, scale collapse prediction, security gates, and an audit trail your compliance team will actually approve of.',
+      'Cap the risk you trust DevForge with via the RemediationPolicy CRD, and it handles the rest — restarts, rollbacks, resource bumps — in seconds. Anything above the cap, or in an excluded namespace, escalates to a human.',
     features: [
-      'Real-time architecture drift detection',
-      'Live AWS cost estimation with budget alerts',
-      'Scale collapse predictor — find the bottleneck early',
-      'Security gates with auto-fix suggestions',
-      'CI/CD agent integration (Phase 4)',
-      'Multi-tenant orgs, RBAC, audit log',
+      'Auto-applies fixes up to your maxRiskAuto threshold',
+      'MTTR measured in seconds, not pages',
+      'Excluded namespaces are never touched',
+      'Higher-risk actions still escalate for approval',
+      'Per-tenant, per-namespace policy control',
+      'Full audit trail of every autonomous action',
     ],
   },
 ];
@@ -44,14 +44,14 @@ export function Modes() {
     <section id="modes" className="relative scroll-mt-24 py-24 sm:py-32">
       <Container size="xl">
         <Reveal className="mx-auto max-w-3xl text-center">
-          <span className="text-micro font-semibold text-brand-400">Two modes, one product</span>
+          <span className="text-micro font-semibold text-brand-400">Two modes, one operator</span>
           <h2 className="mt-3 text-display-lg font-bold tracking-tight">
-            Built for the engineer you are{' '}
-            <GradientText variant="brand">today</GradientText> — and the one you&rsquo;re becoming.
+            From co-pilot to{' '}
+            <GradientText variant="brand">autopilot</GradientText> — you choose how much it does.
           </h2>
           <p className="mt-5 text-body-lg text-foreground-secondary">
-            Pick a mode on install. Toggle anytime. The backend is the same; the affordances meet
-            you where you are.
+            Set the policy per tenant and namespace. Start in co-pilot, earn trust, then let
+            DevForge OS take the wheel on the incidents you&rsquo;re comfortable automating.
           </p>
         </Reveal>
 

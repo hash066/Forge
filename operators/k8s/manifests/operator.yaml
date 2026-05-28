@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devforge-operator
+  namespace: devforge-system
+  labels: { app: devforge-operator }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: devforge-operator }
+  template:
+    metadata:
+      labels: { app: devforge-operator }
+    spec:
+      serviceAccountName: devforge-operator
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+      containers:
+        - name: operator
+          image: devforge/operator:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DEVFORGE_CONTROL_PLANE_URL
+              value: "http://devforge-control-plane.devforge-system.svc.cluster.local:8000"
+            - name: DEVFORGE_TENANT_ID
+              value: "demo"
+            - name: DEVFORGE_MODE
+              value: "suggest" # auto | suggest | off
+            - name: DEVFORGE_CLUSTER
+              value: "kind-devforge"
+          resources:
+            requests: { cpu: "50m", memory: "96Mi" }
+            limits: { cpu: "300m", memory: "256Mi" }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+---
+# Default policy: propose fixes, auto-apply only low-risk ones.
+apiVersion: devforge.io/v1alpha1
+kind: RemediationPolicy
+metadata:
+  name: default
+  namespace: devforge-system
+spec:
+  mode: suggest
+  maxRiskAuto: low
+  allowedActions:
+    - rollback
+    - set_resources
+    - add_limits
+    - adjust_probe
+    - restart_pod
+  excludedNamespaces:
+    - kube-system
+    - devforge-system

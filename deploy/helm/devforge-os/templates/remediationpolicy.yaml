@@ -1,0 +1,21 @@
+{{- if .Values.remediationPolicy.create }}
+apiVersion: devforge.io/v1alpha1
+kind: RemediationPolicy
+metadata:
+  name: default
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "devforge-os.labels" . | nindent 4 }}
+spec:
+  mode: {{ .Values.operator.mode | quote }}
+  maxRiskAuto: {{ .Values.operator.maxRiskAuto | quote }}
+  allowedActions:
+    - rollback
+    - set_resources
+    - add_limits
+    - adjust_probe
+    - restart_pod
+  excludedNamespaces:
+    - kube-system
+    - devforge-system
+{{- end }}

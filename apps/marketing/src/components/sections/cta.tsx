@@ -8,7 +8,7 @@ import {
   GridBackground,
   Reveal,
 } from '@devforge/ui';
-import { ArrowRight, Download } from 'lucide-react';
+import { ArrowRight, Github, Terminal } from 'lucide-react';
 
 export function CTASection() {
   return (
@@ -22,33 +22,32 @@ export function CTASection() {
           >
             <GridBackground mask="radial" glow className="px-6 py-20 sm:px-12">
               <h2 className="mx-auto max-w-2xl text-display-xl font-bold tracking-tight text-foreground">
-                Ready to make your architecture{' '}
-                <GradientText variant="brand">non-negotiable</GradientText>?
+                Ready to make 3am pages{' '}
+                <GradientText variant="brand">a thing of the past</GradientText>?
               </h2>
               <p className="mx-auto mt-5 max-w-xl text-body-lg text-foreground-secondary">
-                Install the extension, define your blueprint, and ship knowing the next bug won&rsquo;t
-                be architectural.
+                Install the operator, set your policy, and let DevForge OS detect, diagnose, and
+                heal — while you sleep.
               </p>
 
               <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <Button asChild size="xl" className="group">
-                  <a
-                    href={process.env.NEXT_PUBLIC_VSCODE_EXTENSION_URL ?? '#'}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <Download className="h-4 w-4" />
-                    Install DevForge
+                  <Link href="#how-it-works">
+                    <Terminal className="h-4 w-4" />
+                    Install the operator
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                  </a>
+                  </Link>
                 </Button>
                 <Button asChild size="xl" variant="secondary">
-                  <Link href="/enterprise">Talk to sales</Link>
+                  <a href="https://github.com/hash066/Forge" target="_blank" rel="noreferrer">
+                    <Github className="h-4 w-4" />
+                    View on GitHub
+                  </a>
                 </Button>
               </div>
 
               <p className="mt-6 text-caption text-foreground-tertiary">
-                Free for individuals. Enterprise: SSO, audit log, dedicated tenancy, SOC 2 ready.
+                Open install via Helm. Enterprise: SSO, multi-cluster, audit log, SOC 2 ready.
               </p>
             </GridBackground>
           </GlassCard>

@@ -13,77 +13,66 @@ import {
   tokenStyles,
   type CodeLine,
 } from '@devforge/ui';
-import { ArrowRight, Download, Sparkles } from 'lucide-react';
+import { ArrowRight, Sparkles, Terminal } from 'lucide-react';
 
 /**
- * Pre-tokenised demo code. Hand-coloured against the design system tokens —
- * realistic enough to feel alive without dragging in a real syntax highlighter.
- *
- * This snippet is intentionally chosen to look like infrastructure code that
- * DevForge would analyse (Terraform-style resource, the architectural domain).
+ * Hero code card — a live DevForge OS incident: a Kubernetes pod fault, the GPT
+ * root-cause analysis, and the auto-applied remediation. This is the product in
+ * one glance.
  */
 const HERO_CODE: CodeLine[] = [
   {
+    tokens: [{ text: '# devforge-operator: incident detected', className: tokenStyles.comment }],
+  },
+  {
     tokens: [
-      { text: 'resource', className: tokenStyles.keyword },
-      { text: ' ' },
-      { text: '"aws_db_instance"', className: tokenStyles.string },
-      { text: ' ' },
-      { text: '"primary"', className: tokenStyles.string },
-      { text: ' ' },
-      { text: '{', className: tokenStyles.punctuation },
+      { text: 'reason', className: tokenStyles.variable },
+      { text: ':     ', className: tokenStyles.operator },
+      { text: 'OOMKilled', className: tokenStyles.keyword },
+      { text: '  # exit 137', className: tokenStyles.comment },
     ],
   },
   {
     tokens: [
-      { text: '  identifier        ', className: tokenStyles.variable },
-      { text: '= ', className: tokenStyles.operator },
-      { text: '"devforge-prod"', className: tokenStyles.string },
+      { text: 'target', className: tokenStyles.variable },
+      { text: ':     ', className: tokenStyles.operator },
+      { text: 'shop/cart-api', className: tokenStyles.string },
+    ],
+  },
+  { tokens: [{ text: '' }] },
+  {
+    tokens: [{ text: '# ── AI root cause · gpt-5.5 ──', className: tokenStyles.comment }],
+  },
+  {
+    tokens: [
+      { text: 'cause', className: tokenStyles.variable },
+      { text: ':      ', className: tokenStyles.operator },
+      { text: 'memory limit 256Mi < working set', className: tokenStyles.string },
     ],
   },
   {
     tokens: [
-      { text: '  engine            ', className: tokenStyles.variable },
-      { text: '= ', className: tokenStyles.operator },
-      { text: '"postgres"', className: tokenStyles.string },
+      { text: 'fix', className: tokenStyles.variable },
+      { text: ':        ', className: tokenStyles.operator },
+      { text: 'set_resources', className: tokenStyles.keyword },
+      { text: ' → ', className: tokenStyles.operator },
+      { text: '384Mi', className: tokenStyles.number },
     ],
   },
   {
     tokens: [
-      { text: '  instance_class    ', className: tokenStyles.variable },
-      { text: '= ', className: tokenStyles.operator },
-      { text: '"db.r6g.xlarge"', className: tokenStyles.string },
+      { text: 'risk', className: tokenStyles.variable },
+      { text: ':       ', className: tokenStyles.operator },
+      { text: 'low', className: tokenStyles.string },
+      { text: ' · auto-applied', className: tokenStyles.comment },
     ],
   },
   {
     tokens: [
-      { text: '  allocated_storage ', className: tokenStyles.variable },
-      { text: '= ', className: tokenStyles.operator },
-      { text: '500', className: tokenStyles.number },
+      { text: 'status', className: tokenStyles.variable },
+      { text: ':     ', className: tokenStyles.operator },
+      { text: '✓ healed in 2.4s', className: tokenStyles.string },
     ],
-  },
-  {
-    tokens: [
-      { text: '  multi_az          ', className: tokenStyles.variable },
-      { text: '= ', className: tokenStyles.operator },
-      { text: 'true', className: tokenStyles.keyword },
-    ],
-  },
-  {
-    tokens: [
-      { text: '  storage_encrypted ', className: tokenStyles.variable },
-      { text: '= ', className: tokenStyles.operator },
-      { text: 'true', className: tokenStyles.keyword },
-    ],
-  },
-  {
-    tokens: [
-      { text: '  ', className: tokenStyles.variable },
-      { text: '// DevForge: cost ≈ $387/mo, matches blueprint v4', className: tokenStyles.comment },
-    ],
-  },
-  {
-    tokens: [{ text: '}', className: tokenStyles.punctuation }],
   },
 ];
 
@@ -107,7 +96,7 @@ export function Hero() {
             >
               <Sparkles className="h-3.5 w-3.5 text-brand-400" aria-hidden />
               <span className="text-caption font-medium text-foreground-secondary">
-                Now in private beta · For VS Code &amp; Kiro
+                The autonomous AI SRE for Kubernetes · powered by OpenAI
               </span>
             </motion.div>
 
@@ -117,9 +106,9 @@ export function Hero() {
               transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.05 }}
               className="text-display-2xl font-black tracking-tight text-foreground"
             >
-              Stop shipping code.{' '}
+              Kubernetes that{' '}
               <GradientText animate variant="brand">
-                Start architecting it.
+                heals itself.
               </GradientText>
             </motion.h1>
 
@@ -129,9 +118,9 @@ export function Hero() {
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
               className="mt-6 max-w-xl text-body-lg text-foreground-secondary"
             >
-              DevForge is the IDE extension that holds you to your own design. Real-time drift
-              detection, AWS cost guardrails, security gates that block the bad commits, and a
-              mentor that asks the questions a senior engineer would.
+              DevForge OS is an in-cluster operator that watches your workloads, diagnoses every
+              incident with GPT — crash loops, OOM kills, bad rollouts, cost waste, security holes —
+              and remediates them automatically. With policy gates and a full audit trail.
             </motion.p>
 
             <motion.div
@@ -141,18 +130,14 @@ export function Hero() {
               className="mt-10 flex flex-col gap-3 sm:flex-row"
             >
               <Button asChild size="xl" className="group">
-                <a
-                  href={process.env.NEXT_PUBLIC_VSCODE_EXTENSION_URL ?? '#'}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <Download className="h-4 w-4" />
-                  Install for VS Code
+                <Link href="#how-it-works">
+                  <Terminal className="h-4 w-4" />
+                  Install the operator
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                </a>
+                </Link>
               </Button>
               <Button asChild size="xl" variant="secondary">
-                <Link href="#how-it-works">See how it works</Link>
+                <Link href="#how-it-works">Watch it heal</Link>
               </Button>
             </motion.div>
 
@@ -162,49 +147,46 @@ export function Hero() {
               transition={{ duration: 0.5, delay: 0.45 }}
               className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3"
             >
-              <VerifiedBadge tone="verified">Bedrock Claude Sonnet 4</VerifiedBadge>
-              <VerifiedBadge tone="ai">11 analysis endpoints</VerifiedBadge>
+              <VerifiedBadge tone="ai">OpenAI · GPT-5.5</VerifiedBadge>
+              <VerifiedBadge tone="verified">Autonomous remediation</VerifiedBadge>
               <span className="text-caption text-foreground-tertiary">
-                Free for individuals · SOC 2 in progress
+                Helm install · RBAC least-priv · SOC 2 in progress
               </span>
             </motion.div>
           </div>
 
-          {/* RIGHT — floating code card + mentor bubble overlay */}
+          {/* RIGHT — floating incident card + AI diagnosis bubble */}
           <div className="relative flex justify-center lg:justify-end">
-            {/* Subtle floating animation on the whole composition */}
             <motion.div
               animate={{ y: [0, -8, 0] }}
               transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
               className="relative w-full max-w-[560px]"
             >
               <FloatingCodeCard
-                filename="infra/primary-db.tf"
-                language="terraform"
+                filename="incident · shop/cart-api"
+                language="yaml"
                 lines={HERO_CODE}
                 badges={[
-                  { tone: 'verified', label: 'No drift' },
-                  { tone: 'brand', label: '$387/mo' },
-                  { tone: 'ai', label: 'Reviewed by Claude' },
+                  { tone: 'brand', label: 'OOMKilled' },
+                  { tone: 'ai', label: 'gpt-5.5' },
+                  { tone: 'verified', label: 'healed' },
                 ]}
                 initial={{ opacity: 0, y: 32, rotateX: 4 }}
                 animate={{ opacity: 1, y: 0, rotateX: 0 }}
                 transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
               />
 
-              {/* Mentor bubble — floats over the code card, lower-left */}
               <MentorBubble
-                speaker="DevForge asks"
+                speaker="DevForge OS"
                 icon="help"
                 message={
                   <>
-                    Why <span className="font-mono text-ai-300">db.r6g.xlarge</span> for a service
-                    with <span className="font-semibold">peak 40 RPS</span>? A{' '}
-                    <span className="font-mono text-ai-300">db.t4g.medium</span> would save
-                    $310/month.
+                    <span className="font-mono text-ai-300">cart-api</span> was OOM-killed — the
+                    memory limit is below its working set. Raising it to{' '}
+                    <span className="font-semibold">384Mi</span> and rolling out now.
                   </>
                 }
-                meta="Verified against blueprint v4 · 2s ago"
+                meta="Auto-remediated · audit logged · 2.4s ago"
                 className="absolute -bottom-12 -left-6 hidden w-[340px] sm:block lg:-left-16 lg:w-[380px]"
                 initial={{ opacity: 0, x: -16, y: 16 }}
                 animate={{ opacity: 1, x: 0, y: 0 }}
@@ -222,20 +204,20 @@ export function Hero() {
           className="mt-24 sm:mt-32"
         >
           <p className="text-center text-micro font-semibold text-foreground-tertiary">
-            Built on the stack you already trust
+            Runs on the stack you already trust
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-x-10 gap-y-4 text-body-sm text-foreground-tertiary">
-            <span className="font-mono">AWS Bedrock</span>
+            <span className="font-mono">OpenAI</span>
             <span aria-hidden>·</span>
-            <span className="font-mono">Claude Sonnet 4</span>
+            <span className="font-mono">Kubernetes</span>
             <span aria-hidden>·</span>
-            <span className="font-mono">Postgres + RLS</span>
+            <span className="font-mono">kopf operator</span>
             <span aria-hidden>·</span>
-            <span className="font-mono">VS Code</span>
+            <span className="font-mono">Helm</span>
             <span aria-hidden>·</span>
-            <span className="font-mono">Kiro</span>
+            <span className="font-mono">FastAPI</span>
             <span aria-hidden>·</span>
-            <span className="font-mono">tree-sitter</span>
+            <span className="font-mono">App Runner</span>
           </div>
         </motion.div>
       </Container>

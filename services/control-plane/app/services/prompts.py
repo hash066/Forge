@@ -11,6 +11,7 @@ prompt ready to send to Bedrock.
 
 from __future__ import annotations
 
+import json as _json
 import textwrap
 
 # Shared system prompt — sets the AI's tone across every endpoint.
@@ -205,3 +206,63 @@ def diagnose_failure(
         }
         """,
     )
+
+
+# ── DevForge OS — autonomous Kubernetes SRE ────────────────────────────────────
+K8S_SRE_SYSTEM = textwrap.dedent(
+    """
+    You are DevForge OS, an autonomous Site Reliability Engineer for Kubernetes.
+    You receive ONE detected incident with its context — Kubernetes events, recent
+    container logs, container statuses, the relevant spec excerpt, and (when
+    available) usage metrics. You produce a precise root-cause analysis and ONE
+    concrete, safe remediation.
+
+    Operating principles:
+      - Diagnose the single most-probable root cause from the evidence provided.
+        Do not invent signals that are not present.
+      - Choose the least-invasive remediation that actually resolves the issue.
+      - Prefer reversible actions (rollback, resource bump, probe tweak) over
+        destructive ones. Reserve "cordon_drain" for node-level faults.
+      - Be specific: name the exact field and value to change in the patch.
+      - Calibrate "confidence" honestly (0.0–1.0) based on how conclusive the
+        evidence is.
+
+    Allowed remediation actions:
+      restart_pod, rollback, set_resources, scale, patch_image, adjust_probe,
+      add_limits, cordon_drain, none
+
+    Respond with STRICT JSON ONLY, matching the requested schema exactly. Do not
+    emit any prose outside the JSON object.
+    """,
+).strip()
+
+
+def diagnose_k8s_incident(context: dict) -> str:
+    """Build the user prompt for a single Kubernetes incident."""
+    context_json = _json.dumps(context, indent=2, default=str)[:6000]
+    return textwrap.dedent(
+        f"""
+        Diagnose this Kubernetes incident and return a remediation.
+
+        Incident context (JSON):
+        {context_json}
+
+        Return JSON with EXACTLY this shape:
+        {{
+          "root_cause": "what is actually wrong, in one or two precise sentences",
+          "summary": "one-line human-readable summary",
+          "confidence": 0.0,
+          "category": "reliability|resource|config|image|security|cost",
+          "evidence": ["a concrete signal pulled from the context", "..."],
+          "remediation": {{
+            "action": "restart_pod|rollback|set_resources|scale|patch_image|adjust_probe|add_limits|cordon_drain|none",
+            "target": "namespace/kind/name",
+            "rationale": "why this specific change fixes the root cause",
+            "patch": {{}},
+            "risk": "low|medium|high",
+            "mode": "auto|suggest",
+            "commands": ["kubectl ... (the equivalent manual command, for display)"]
+          }}
+        }}
+        """,
+    ).strip()

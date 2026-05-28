@@ -33,7 +33,7 @@ const FOOTER_LINKS = {
 } as const;
 
 const SOCIAL_LINKS = [
-  { label: 'GitHub', href: 'https://github.com/devforge', icon: Github },
+  { label: 'GitHub', href: 'https://github.com/hash066/Forge', icon: Github },
   { label: 'Twitter', href: 'https://twitter.com/devforge', icon: Twitter },
   { label: 'LinkedIn', href: 'https://linkedin.com/company/devforge', icon: Linkedin },
 ];
@@ -50,8 +50,8 @@ export function Footer() {
               <span className="text-heading-sm font-semibold tracking-tight">DevForge</span>
             </Link>
             <p className="mt-4 max-w-xs text-body-sm text-foreground-secondary">
-              Architecture-first AI for engineers who ship. Drift detection, cost guardrails,
-              and a mentor that asks the right questions.
+              The autonomous AI SRE for Kubernetes. Detect, diagnose with GPT, and heal — with
+              policy gates and a full audit trail.
             </p>
             <div className="mt-6 flex gap-1">
               {SOCIAL_LINKS.map((s) => {

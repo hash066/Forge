@@ -1,0 +1,18 @@
+# eksctl cluster config for a production DevForge OS deployment.
+#   eksctl create cluster -f deploy/eks/cluster.yaml
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+metadata:
+  name: devforge
+  region: ap-south-1
+  version: "1.31"
+iam:
+  withOIDC: true
+managedNodeGroups:
+  - name: ng-default
+    instanceType: t3.large
+    desiredCapacity: 2
+    minSize: 2
+    maxSize: 4
+    volumeSize: 30
+    labels: { role: workers }

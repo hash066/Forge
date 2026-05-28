@@ -17,6 +17,7 @@ import { shouldAutoAnalyze } from './language';
 import { registerCostStatusBar } from './features/cost-status-bar';
 import { DashboardViewProvider } from './features/dashboard-view';
 import { securityDiagnostics, clearSecurityFindings } from './features/security-gate';
+import { ClusterIncidentsProvider } from './features/cluster-incidents';
 
 let healthCheckInterval: NodeJS.Timeout | undefined;
 
@@ -34,6 +35,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
   // 3. Diagnostics
   context.subscriptions.push(securityDiagnostics);
+
+  // 3b. Cluster Incidents tree (DevForge OS)
+  const incidents = new ClusterIncidentsProvider();
+  context.subscriptions.push(
+    vscode.window.registerTreeDataProvider(ClusterIncidentsProvider.viewType, incidents),
+    incidents,
+  );
+  incidents.start();
 
   // 4. Commands
   context.subscriptions.push(
@@ -64,6 +73,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         await vscode.workspace.getConfiguration('devforge').update('apiUrl', value, vscode.ConfigurationTarget.Global);
         await pingApi();
       }
+    }),
+    vscode.commands.registerCommand('devforge.refreshIncidents', () => incidents.refresh()),
+    vscode.commands.registerCommand('devforge.openClusterDashboard', async () => {
+      await vscode.env.openExternal(vscode.Uri.parse(getConfig().dashboardUrl));
     }),
   );
 

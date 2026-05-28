@@ -35,6 +35,11 @@ venv/
 .mypy_cache
 .ruff_cache
 
+# Local databases (SQLite demo + tests)
+*.db
+*.sqlite3
+.pytest_devforge.db
+
 # Rust
 target/
 Cargo.lock
@@ -54,6 +59,8 @@ pnpm-debug.log*
 # Test / coverage
 coverage
 .nyc_output
+.coverage
+htmlcov
 
 # Misc
 *.tsbuildinfo

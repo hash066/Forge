@@ -22,6 +22,7 @@ from app.routers.v1 import (
     cost,
     diagnose,
     drift,
+    k8s,
     mentor,
     patterns,
     quiz,
@@ -46,9 +47,21 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         "control_plane.boot",
         version=__version__,
         env=settings.app_env,
-        region=settings.aws_region,
-        model=settings.aws_bedrock_model_id,
+        ai_provider=settings.ai_provider,
+        model=(
+            settings.openai_model
+            if settings.ai_provider == "openai"
+            else settings.aws_bedrock_model_id
+        ),
     )
+    # Create tables if needed. Wrapped so a transient DB issue never blocks boot —
+    # health + AI endpoints stay up; DB-backed endpoints surface errors per request.
+    try:
+        from app.db import init_db
+
+        await init_db()
+    except Exception as exc:
+        logger.warning("db.init_failed", error=str(exc))
     yield
     logger.info("control_plane.shutdown")
 
@@ -98,6 +111,7 @@ def create_app() -> FastAPI:
         security.router,
         patterns.router,
         diagnose.router,
+        k8s.router,
     ]
     for router in v1_routers:
         app.include_router(router, prefix="/v1")

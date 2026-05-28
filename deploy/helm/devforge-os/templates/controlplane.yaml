@@ -1,0 +1,78 @@
+{{- if .Values.controlPlane.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devforge-control-plane
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "devforge-os.labels" . | nindent 4 }}
+    app: devforge-control-plane
+spec:
+  replicas: {{ .Values.controlPlane.replicas }}
+  selector:
+    matchLabels:
+      app: devforge-control-plane
+  template:
+    metadata:
+      labels:
+        app: devforge-control-plane
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+      containers:
+        - name: control-plane
+          image: "{{ .Values.controlPlane.image.repository }}:{{ .Values.controlPlane.image.tag }}"
+          imagePullPolicy: {{ .Values.controlPlane.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.controlPlane.service.port }}
+          env:
+            - name: AI_PROVIDER
+              value: {{ .Values.ai.provider | quote }}
+            - name: OPENAI_MODEL
+              value: {{ .Values.ai.openaiModel | quote }}
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "devforge-os.secretName" . }}
+                  key: OPENAI_API_KEY
+                  optional: true
+            - name: ALLOWED_ORIGINS
+              value: {{ .Values.controlPlane.allowedOrigins | quote }}
+            {{- if .Values.controlPlane.databaseUrl }}
+            - name: DATABASE_URL
+              value: {{ .Values.controlPlane.databaseUrl | quote }}
+            {{- end }}
+            - name: APP_ENV
+              value: "production"
+          readinessProbe:
+            httpGet: { path: /health, port: {{ .Values.controlPlane.service.port }} }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /health, port: {{ .Values.controlPlane.service.port }} }
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          resources:
+            {{- toYaml .Values.controlPlane.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: ["ALL"] }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: devforge-control-plane
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "devforge-os.labels" . | nindent 4 }}
+    app: devforge-control-plane
+spec:
+  type: {{ .Values.controlPlane.service.type }}
+  selector:
+    app: devforge-control-plane
+  ports:
+    - name: http
+      port: {{ .Values.controlPlane.service.port }}
+      targetPort: {{ .Values.controlPlane.service.port }}
+{{- end }}

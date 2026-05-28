@@ -1,0 +1,18 @@
+{
+  "metadata": { "name": "analytics-worker-77b4c5d6e8-rs44m", "namespace": "data" },
+  "spec": {
+    "containers": [
+      {
+        "name": "analytics-worker",
+        "image": "data/analytics:v0.9.3",
+        "resources": { "requests": { "cpu": "100m", "memory": "128Mi" } }
+      }
+    ]
+  },
+  "status": {
+    "phase": "Running",
+    "containerStatuses": [
+      { "name": "analytics-worker", "ready": true, "restartCount": 0, "state": { "running": { "startedAt": "2026-05-28T15:30:00Z" } } }
+    ]
+  }
+}

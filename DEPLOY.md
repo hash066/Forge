@@ -1,18 +1,48 @@
-# DevForge — Deploy Guide
+# DevForge OS — Deploy Guide
 
 Step-by-step to take everything from this repo to live production.
 Target region: **ap-south-1 (Mumbai)**. Region is overridable via `AWS_REGION`.
 
-There are three independent surfaces:
-1. **Backend** → AWS App Runner (~10 min, ~$26/mo idle)
-2. **Marketing site** → Vercel (~5 min, free)
-3. **VS Code extension** → install the `.vsix` locally now; publish to Marketplace later
-
-You can do them in any order, but extension is most useful after backend is live.
+> **DevForge OS** is the self-healing-Kubernetes product. Surfaces:
+> 1. **Control plane** (AI brain) → AWS App Runner *(§1)* **or** in-cluster *(§0)*
+> 2. **Operator + dashboard** → Kubernetes via Helm *(§0)* — kind locally, EKS in prod
+> 3. **Marketing site** → Vercel *(§2)*
+> 4. **VS Code extension** → install the `.vsix` *(§3)*
+>
+> **The OpenAI key:** set `OPENAI_API_KEY` wherever the control plane runs (`.env` locally,
+> App Runner env in §1, or Helm `--set ai.openaiApiKey=` in §0). Without it the control plane
+> runs the deterministic SRE engine, so demos still work.
 
 ---
 
-## 1. Backend → AWS App Runner
+## 0. DevForge OS on Kubernetes (operator + control plane + dashboard)
+
+**Fastest demo (no cloud):** see [`demo/README.md`](demo/README.md) — `./demo/run-local.sh`
+(no cluster) or `./demo/up.sh` (local kind cluster).
+
+**Production (EKS):** full walkthrough in [`deploy/eks/README.md`](deploy/eks/README.md). In short:
+
+```bash
+eksctl create cluster -f deploy/eks/cluster.yaml
+# build + push devforge/control-plane and devforge/operator images to ECR (see eks README)
+helm install devforge-os ./deploy/helm/devforge-os \
+  --namespace devforge-system --create-namespace \
+  --set ai.openaiApiKey=$OPENAI_API_KEY --set operator.mode=suggest \
+  --set controlPlane.image.repository=$REGISTRY/devforge-control-plane \
+  --set operator.image.repository=$REGISTRY/devforge-operator
+```
+
+The **dashboard** (`apps/dashboard`) deploys to Vercel like the marketing site (§2); set
+`NEXT_PUBLIC_API_URL` to the control plane's public URL (App Runner URL, or an Ingress over the
+in-cluster Service).
+
+---
+
+## 1. Control plane → AWS App Runner
+
+Alternative to running the control plane in-cluster (§0). The CDK stack now injects
+`AI_PROVIDER`/`OPENAI_MODEL`/`OPENAI_API_KEY` — pass the key at deploy time:
+`OPENAI_API_KEY=sk-... pnpm deploy`.
 
 ### 1.1 — Prereqs (one-time, ~5 min)
 

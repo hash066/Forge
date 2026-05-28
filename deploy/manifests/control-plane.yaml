@@ -1,0 +1,71 @@
+# DevForge OS control plane — in-cluster deployment for the kind/EKS demo.
+# The operator and dashboard talk to the Service below.
+apiVersion: v1
+kind: Namespace
+metadata: { name: devforge-system }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devforge-control-plane
+  namespace: devforge-system
+  labels: { app: devforge-control-plane }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: devforge-control-plane }
+  template:
+    metadata:
+      labels: { app: devforge-control-plane }
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+      containers:
+        - name: control-plane
+          image: devforge/control-plane:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          env:
+            - name: AI_PROVIDER
+              value: "openai" # falls back to deterministic if no key
+            - name: OPENAI_MODEL
+              value: "gpt-5.5"
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: devforge-secrets
+                  key: OPENAI_API_KEY
+                  optional: true
+            - name: ALLOWED_ORIGINS
+              value: "http://localhost:3001"
+            - name: APP_ENV
+              value: "production"
+          readinessProbe:
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          resources:
+            requests: { cpu: "100m", memory: "256Mi" }
+            limits: { cpu: "1", memory: "512Mi" }
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: ["ALL"] }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: devforge-control-plane
+  namespace: devforge-system
+  labels: { app: devforge-control-plane }
+spec:
+  selector: { app: devforge-control-plane }
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000

@@ -1,0 +1,24 @@
+{
+  "metadata": { "name": "cart-api-7c5d9f8b6d-x2k9p", "namespace": "shop" },
+  "spec": {
+    "containers": [
+      {
+        "name": "cart-api",
+        "image": "shop/cart-api:v1.8.2",
+        "resources": { "requests": { "cpu": "100m", "memory": "256Mi" }, "limits": { "cpu": "500m", "memory": "256Mi" } }
+      }
+    ]
+  },
+  "status": {
+    "phase": "Running",
+    "containerStatuses": [
+      {
+        "name": "cart-api",
+        "ready": false,
+        "restartCount": 4,
+        "state": { "running": { "startedAt": "2026-05-28T17:40:00Z" } },
+        "lastState": { "terminated": { "reason": "OOMKilled", "exitCode": 137 } }
+      }
+    ]
+  }
+}

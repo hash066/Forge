@@ -1,0 +1,23 @@
+{
+  "metadata": { "name": "recommender-5b7d6c9f4a-mn8qz", "namespace": "ml" },
+  "spec": {
+    "containers": [
+      {
+        "name": "recommender",
+        "image": "ml/recommender:v3.1.0-gpu",
+        "resources": { "requests": { "cpu": "250m", "memory": "512Mi" }, "limits": { "cpu": "1", "memory": "1Gi" } }
+      }
+    ]
+  },
+  "status": {
+    "phase": "Pending",
+    "containerStatuses": [
+      {
+        "name": "recommender",
+        "ready": false,
+        "restartCount": 0,
+        "state": { "waiting": { "reason": "ImagePullBackOff", "message": "Back-off pulling image \"ml/recommender:v3.1.0-gpu\": not found" } }
+      }
+    ]
+  }
+}

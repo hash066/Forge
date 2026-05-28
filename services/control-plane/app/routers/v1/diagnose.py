@@ -16,7 +16,7 @@ from pydantic import Field
 
 from app.deps import TenantContext, require_internal_api_key, tenant_context
 from app.schemas.common import AnalysisMetadata, StrictModel
-from app.services.bedrock import BedrockError, get_bedrock_client
+from app.services.ai import AIProviderError, get_ai_provider
 from app.services.prompts import SYSTEM_PROMPT, diagnose_failure
 
 router = APIRouter(prefix="/diagnose", tags=["cli"])
@@ -49,14 +49,14 @@ async def diagnose(
     ctx: TenantContext = Depends(tenant_context),
 ) -> DiagnoseResponse:
     start = time.perf_counter()
-    bedrock = get_bedrock_client()
+    provider = get_ai_provider()
     prompt = diagnose_failure(payload.git_log, payload.git_diff, payload.stack_trace, payload.logs)
     try:
-        result = await bedrock.invoke(prompt, system=SYSTEM_PROMPT, temperature=0.2)
-    except BedrockError as exc:
+        result = await provider.generate(prompt, system=SYSTEM_PROMPT, temperature=0.2, json=True)
+    except AIProviderError as exc:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"Bedrock invocation failed: {exc}",
+            detail=f"AI invocation failed: {exc}",
         ) from exc
     parsed = result.json_payload or {}
     return DiagnoseResponse(

@@ -1,0 +1,47 @@
+{{- if .Values.operator.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devforge-operator
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "devforge-os.labels" . | nindent 4 }}
+    app: devforge-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: devforge-operator
+  template:
+    metadata:
+      labels:
+        app: devforge-operator
+    spec:
+      serviceAccountName: devforge-operator
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+      containers:
+        - name: operator
+          image: "{{ .Values.operator.image.repository }}:{{ .Values.operator.image.tag }}"
+          imagePullPolicy: {{ .Values.operator.image.pullPolicy }}
+          env:
+            - name: DEVFORGE_CONTROL_PLANE_URL
+              value: {{ include "devforge-os.controlPlaneUrl" . | quote }}
+            - name: DEVFORGE_TENANT_ID
+              value: {{ .Values.tenantId | quote }}
+            - name: DEVFORGE_MODE
+              value: {{ .Values.operator.mode | quote }}
+            - name: DEVFORGE_CLUSTER
+              value: {{ .Values.clusterName | quote }}
+            - name: DEVFORGE_SNAPSHOT_INTERVAL
+              value: {{ .Values.operator.snapshotInterval | quote }}
+            - name: DEVFORGE_EXCLUDED_NAMESPACES
+              value: {{ .Values.operator.excludedNamespaces | quote }}
+          resources:
+            {{- toYaml .Values.operator.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+{{- end }}

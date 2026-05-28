@@ -4,32 +4,32 @@ import { Container, GlassCard, GradientText, Reveal } from '@devforge/ui';
 const STACK = [
   {
     layer: 'AI Reasoning',
-    items: ['AWS Bedrock', 'Claude Sonnet 4', 'Versioned prompts'],
+    items: ['OpenAI GPT-5.5', 'Structured RCA', 'Provider-swappable'],
     tone: 'ai',
   },
   {
     layer: 'Control Plane',
-    items: ['FastAPI', 'Pydantic v2', 'Async by default'],
+    items: ['FastAPI', 'Pydantic v2', 'Async + WebSocket'],
     tone: 'brand',
   },
   {
-    layer: 'Data',
-    items: ['Postgres + RLS', 'Redis (ElastiCache)', 'S3 blueprints'],
+    layer: 'Operator',
+    items: ['Python kopf', 'RemediationPolicy CRD', 'Least-priv RBAC'],
     tone: 'verified',
   },
   {
-    layer: 'Code Analysis',
-    items: ['tree-sitter', 'NetworkX graphs', 'Multi-language'],
+    layer: 'Data',
+    items: ['Postgres / SQLite', 'SQLAlchemy + Alembic', 'Immutable audit log'],
     tone: 'ai',
   },
   {
     layer: 'Surfaces',
-    items: ['VS Code extension', 'Kiro extension', 'Rust CLI'],
+    items: ['Live dashboard', 'VS Code extension', 'Rust CLI'],
     tone: 'brand',
   },
   {
     layer: 'Infrastructure',
-    items: ['AWS CDK', 'Fargate', 'API Gateway WS'],
+    items: ['Helm · kind / EKS', 'AWS App Runner + CDK', 'Docker'],
     tone: 'verified',
   },
 ] as const;

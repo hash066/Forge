@@ -1,0 +1,20 @@
+apiVersion: v2
+name: devforge-os
+description: >-
+  DevForge OS — the autonomous AI SRE for Kubernetes. Installs the self-healing
+  operator and the AI control plane (OpenAI-powered) with least-privilege RBAC,
+  a RemediationPolicy CRD, and full audit.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - kubernetes
+  - sre
+  - ai
+  - openai
+  - self-healing
+  - operator
+  - incident-response
+home: https://github.com/hash066/Forge
+maintainers:
+  - name: DevForge

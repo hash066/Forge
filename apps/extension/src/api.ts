@@ -75,6 +75,32 @@ export interface RiskResponse {
   metadata: { latency_ms: number };
 }
 
+// ── Kubernetes (DevForge OS) ─────────────────────────────────────────────────
+export interface K8sRemediation {
+  action: string;
+  target: string;
+  rationale?: string;
+  risk?: string;
+  mode?: string;
+  commands?: string[];
+}
+
+export interface K8sIncident {
+  id: string;
+  namespace: string;
+  kind: string;
+  name: string;
+  reason: string;
+  severity: Severity;
+  status: string;
+  summary: string;
+  root_cause: string;
+  confidence: number;
+  remediation: K8sRemediation;
+  model_used: string | null;
+  detected_at: string;
+}
+
 // ── Client ────────────────────────────────────────────────────────────────
 
 export class ApiError extends Error {
@@ -114,6 +140,18 @@ async function request<T>(path: string, body: unknown): Promise<T> {
   }
 }
 
+async function getRequest<T>(path: string): Promise<T> {
+  const cfg = getConfig();
+  const res = await fetch(`${cfg.apiUrl}${path}`, {
+    headers: { 'X-API-Key': cfg.apiKey, 'X-Tenant-Id': cfg.tenantId },
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!res.ok) {
+    throw new ApiError(`${res.status} ${res.statusText}`, res.status, await res.text());
+  }
+  return (await res.json()) as T;
+}
+
 export const api = {
   analyzeCode: (code: string, language: string, blueprintId?: string) =>
     request<AnalysisResponse>('/v1/analysis', {
@@ -133,6 +171,9 @@ export const api = {
 
   scoreRisk: (architecture: Record<string, unknown>, context?: Record<string, unknown>) =>
     request<RiskResponse>('/v1/risk', { architecture, context: context ?? null }),
+
+  listIncidents: (limit = 50) =>
+    getRequest<K8sIncident[]>(`/v1/k8s/incidents?limit=${limit}`),
 
   health: async (): Promise<boolean> => {
     const cfg = getConfig();

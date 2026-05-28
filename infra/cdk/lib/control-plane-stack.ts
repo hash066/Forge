@@ -33,6 +33,14 @@ export class ControlPlaneStack extends cdk.Stack {
     const region = this.region;
     const account = this.account;
 
+    // OpenAI key (primary AI provider). Provide at deploy time via:
+    //   OPENAI_API_KEY=sk-... pnpm deploy
+    //   or: cdk deploy -c openaiApiKey=sk-...
+    // If omitted, the control plane runs the deterministic SRE engine (and can
+    // still use Bedrock as a fallback via the instance role below).
+    const openaiApiKey =
+      process.env.OPENAI_API_KEY ?? (this.node.tryGetContext('openaiApiKey') as string | undefined);
+
     // ── 1. ECR repository ─────────────────────────────────────────────────
     const repo = new ecr.Repository(this, 'ControlPlaneRepo', {
       repositoryName: 'devforge-control-plane',
@@ -113,12 +121,19 @@ export class ControlPlaneStack extends cdk.Stack {
             port: '8000',
             runtimeEnvironmentVariables: [
               { name: 'APP_ENV', value: 'production' },
+              // OpenAI is the primary brain; Bedrock stays available as fallback.
+              { name: 'AI_PROVIDER', value: openaiApiKey ? 'openai' : 'bedrock' },
+              { name: 'OPENAI_MODEL', value: 'gpt-5.5' },
+              ...(openaiApiKey ? [{ name: 'OPENAI_API_KEY', value: openaiApiKey }] : []),
               { name: 'AWS_REGION', value: region },
               {
                 name: 'AWS_BEDROCK_MODEL_ID',
                 value: 'anthropic.claude-sonnet-4-20250514-v1:0',
               },
-              { name: 'ALLOWED_ORIGINS', value: 'https://devforge.io,https://*.vercel.app' },
+              {
+                name: 'ALLOWED_ORIGINS',
+                value: 'https://devforge.io,https://*.vercel.app,http://localhost:3001',
+              },
               { name: 'LOG_LEVEL', value: 'INFO' },
             ],
           },

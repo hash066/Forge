@@ -2,14 +2,14 @@
 import * as React from 'react';
 import { Container, GlassCard, Reveal, VerifiedBadge, GradientText } from '@devforge/ui';
 import {
-  GitCompareArrows,
-  ShieldAlert,
-  Coins,
-  MessageSquareCode,
-  LayoutDashboard,
-  Network,
-  TrendingDown,
+  Activity,
   BrainCircuit,
+  ShieldCheck,
+  Coins,
+  ShieldAlert,
+  LayoutDashboard,
+  ScrollText,
+  Boxes,
 } from 'lucide-react';
 
 interface Feature {
@@ -24,59 +24,60 @@ interface Feature {
 
 const FEATURES: Feature[] = [
   {
-    icon: GitCompareArrows,
-    title: 'Real-time drift detection',
+    icon: Activity,
+    title: 'Autonomous remediation',
     blurb:
-      'Every keystroke is compared to your architectural blueprint. The moment your code diverges — wrong database, missing service, layer violation — DevForge says so. Not after deployment. Not after a postmortem. Now.',
-    badge: { tone: 'verified', label: 'Live AST diff' },
+      "DevForge OS doesn't just alert — it acts. Crash loops, OOM kills, failed rollouts and stuck pods are detected, diagnosed, and fixed by the in-cluster operator in seconds, often before the pager even fires.",
+    badge: { tone: 'verified', label: 'Self-healing' },
+    span: 'col-span-2',
+  },
+  {
+    icon: BrainCircuit,
+    title: 'GPT root-cause analysis',
+    blurb:
+      'Every incident goes to OpenAI with full context — events, logs, container status, the spec. You get the actual root cause and a concrete fix with a confidence score. Not "pod is down". Why it is down.',
+    badge: { tone: 'ai', label: 'gpt-5.5' },
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Policy gates & approvals',
+    blurb:
+      'A RemediationPolicy CRD decides what auto-applies and what waits for a human. Low-risk fixes heal themselves; anything risky lands in an approval queue. You set the blast radius.',
+    badge: { tone: 'brand', label: 'RemediationPolicy CRD' },
+  },
+  {
+    icon: Coins,
+    title: 'Cost & right-sizing',
+    blurb:
+      'Over-provisioned requests and idle headroom are surfaced with the dollar figure attached. DevForge proposes right-sized resources so you reclaim spend without risking stability.',
+    badge: { tone: 'brand', label: 'FinOps built-in' },
     span: 'col-span-2',
   },
   {
     icon: ShieldAlert,
-    title: 'Security gates that block',
+    title: 'Security guardian',
     blurb:
-      'Hardcoded secrets, SQL injection, missing encryption, exposed endpoints — flagged the instant they hit your buffer. Critical findings become blocking modals: you fix it or you explain it.',
-    badge: { tone: 'critical', label: 'OWASP coverage' },
-  },
-  {
-    icon: Coins,
-    title: 'AWS cost whisperer',
-    blurb:
-      'Status bar tells you the monthly bill before the bill arrives. AWS Price List API on every save. Budget alerts before you ship the resource that doubles your AWS spend.',
-    badge: { tone: 'brand', label: 'Updates < 5s' },
-  },
-  {
-    icon: MessageSquareCode,
-    title: 'A mentor, not autocomplete',
-    blurb:
-      'Bedrock Claude Sonnet 4 — running in a Socratic mode. It asks the questions a principal engineer would ask before they touched their keyboard.',
-    badge: { tone: 'ai', label: 'Argue mode' },
-    span: 'col-span-2',
+      'Privileged containers, hostPath mounts, missing limits, root users — caught the moment they hit the cluster, each with a least-invasive patch to lock it down.',
+    badge: { tone: 'critical', label: 'Misconfig scan' },
   },
   {
     icon: LayoutDashboard,
-    title: 'Risk dashboard',
+    title: 'Live command center',
     blurb:
-      'Scalability, over-engineering, security, consistency. Four numbers that say where your architecture is fragile. Track them over time. Watch them improve.',
+      'A real-time dashboard streams every incident, AI diagnosis, and remediation over WebSocket. Watch cluster health climb back to 100% as DevForge works.',
   },
   {
-    icon: Network,
-    title: 'Blueprint generator',
+    icon: ScrollText,
+    title: 'Multi-tenant & audited',
     blurb:
-      'Define scale, budget, team size. Get an architecture diagram, AWS service picks, cost estimate, and a scaling forecast — in under 10 seconds.',
+      'Every row is tenant-scoped and every action is written to an immutable audit log. Built for platform teams running many clusters under one control plane.',
+    badge: { tone: 'verified', label: 'Audit trail' },
   },
   {
-    icon: TrendingDown,
-    title: 'Scale collapse predictor',
+    icon: Boxes,
+    title: 'Runs anywhere',
     blurb:
-      'Tells you exactly which component breaks at 50k users, and what to swap in before then. No more "we\'ll figure it out at scale."',
-    badge: { tone: 'warning', label: 'Failure timeline' },
-  },
-  {
-    icon: BrainCircuit,
-    title: 'Comprehension validator',
-    blurb:
-      'Student mode quiz after every AI generation. If you can\'t explain it, you don\'t ship it. Tracks your skill across six dimensions over time.',
+      'One Helm install onto kind, EKS, GKE, or AKS. A Python kopf operator with least-privilege RBAC — no sidecars, no mesh, no lock-in.',
   },
 ];
 
@@ -87,12 +88,12 @@ export function Features() {
         <Reveal from="up" className="mx-auto max-w-3xl text-center">
           <span className="text-micro font-semibold text-brand-400">Features</span>
           <h2 className="mt-3 text-display-lg font-bold tracking-tight">
-            Eight ways DevForge keeps your architecture{' '}
-            <GradientText variant="brand">honest</GradientText>.
+            Eight ways DevForge OS keeps your cluster{' '}
+            <GradientText variant="brand">healthy</GradientText>.
           </h2>
           <p className="mt-5 text-body-lg text-foreground-secondary">
-            Every feature is wired to the same control plane — AWS Bedrock for reasoning,
-            Postgres for state, multi-tenant from line one. None of it is hand-waved.
+            Every capability runs through one OpenAI-powered control plane — multi-tenant,
+            audited, and policy-gated from line one. None of it is hand-waved.
           </p>
         </Reveal>
 

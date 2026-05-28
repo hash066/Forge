@@ -1,0 +1,18 @@
+{
+  "metadata": { "name": "batch-trainer-5f4b3c2d1e-zz09x", "namespace": "ml" },
+  "spec": {
+    "containers": [
+      {
+        "name": "batch-trainer",
+        "image": "ml/trainer:v2.0.0",
+        "resources": { "requests": { "cpu": "8", "memory": "32Gi" }, "limits": { "cpu": "8", "memory": "32Gi" } }
+      }
+    ]
+  },
+  "status": {
+    "phase": "Pending",
+    "conditions": [
+      { "type": "PodScheduled", "status": "False", "reason": "Unschedulable", "message": "0/3 nodes are available: 3 Insufficient cpu, 3 Insufficient memory." }
+    ]
+  }
+}

@@ -12,6 +12,7 @@ export interface DevForgeConfig {
   mode: 'student' | 'developer';
   autoAnalyzeOnSave: boolean;
   budgetMonthlyUsd: number;
+  dashboardUrl: string;
 }
 
 export function getConfig(): DevForgeConfig {
@@ -23,6 +24,7 @@ export function getConfig(): DevForgeConfig {
     mode: cfg.get<'student' | 'developer'>('mode', 'developer'),
     autoAnalyzeOnSave: cfg.get<boolean>('autoAnalyzeOnSave', true),
     budgetMonthlyUsd: cfg.get<number>('budgetMonthlyUsd', 100),
+    dashboardUrl: cfg.get<string>('dashboardUrl', 'http://localhost:3001').replace(/\/$/, ''),
   };
 }
 

@@ -1,0 +1,58 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: remediationpolicies.devforge.io
+spec:
+  group: devforge.io
+  scope: Namespaced
+  names:
+    kind: RemediationPolicy
+    plural: remediationpolicies
+    singular: remediationpolicy
+    shortNames: ["rempol", "rp"]
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                mode:
+                  type: string
+                  enum: ["auto", "suggest", "off"]
+                  default: "suggest"
+                allowedActions:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - restart_pod
+                      - rollback
+                      - set_resources
+                      - scale
+                      - patch_image
+                      - adjust_probe
+                      - add_limits
+                      - cordon_drain
+                excludedNamespaces:
+                  type: array
+                  items:
+                    type: string
+                maxRiskAuto:
+                  type: string
+                  enum: ["low", "medium", "high"]
+                  default: "low"
+            status:
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
+      additionalPrinterColumns:
+        - name: Mode
+          type: string
+          jsonPath: .spec.mode
+        - name: MaxRiskAuto
+          type: string
+          jsonPath: .spec.maxRiskAuto

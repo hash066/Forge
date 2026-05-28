@@ -1,244 +1,96 @@
-# DevForge — Continue From Here
+# DevForge OS — Continue From Here
 
-A complete handoff document. Read top to bottom; the bottom half is the to-do list.
-
----
-
-## What you're inheriting
-
-A working monorepo for **DevForge** — the architecture-first IDE assistant
-described in `README.md` and `context.md`. The previous session executed
-**Phase 0** of the reconstruction plan and laid foundations for Phases 1–2.
-
-Stack: pnpm workspaces · Turborepo · Next.js 15 (marketing) · FastAPI
-(backend) · VS Code extension (TypeScript) · Rust CLI · AWS CDK (TypeScript).
-Region target: **ap-south-1**.
+Handoff for the next session. DevForge was rebuilt into **DevForge OS — an autonomous
+AI SRE for Kubernetes** for the Outskill × OpenAI hackathon. Read `README.md` first,
+then this.
 
 ---
 
-## Repo layout
+## What it is now
 
-```
-devforge/
-├── apps/
-│   ├── marketing/          ✅ Next.js 15 marketing site — builds, renders
-│   └── extension/          ✅ Real VS Code extension — built, .vsix packageable
-├── services/
-│   ├── control-plane/      ✅ FastAPI backend — boots, 16 routes mounted
-│   └── cli/                ✅ Rust CLI — `devforge wtf` wired to /v1/diagnose
-├── packages/
-│   ├── tokens/             ✅ Design tokens (colours, type, motion, Tailwind preset)
-│   ├── ui/                 ✅ 10 branded React components
-│   └── core/               🚧 EMPTY — folder exists for Phase 1 shared types/API client
-├── infra/
-│   └── cdk/                ✅ AWS CDK stack — synthesizes cleanly, NOT YET DEPLOYED
-├── DEPLOY.md               📋 The deploy playbook — read this when you're ready to ship
-├── README.md               📋 Project overview + architecture diagram
-├── context.md              📋 Original product vision + enterprise pivot notes
-└── continue.md             📋 This file
-```
+An in-cluster **operator** detects Kubernetes incidents → the **control plane** diagnoses
+each with **OpenAI GPT** → the operator **remediates** under a `RemediationPolicy` (auto vs
+approve) → a live **dashboard** streams the whole self-healing loop. Multi-tenant, audited,
+policy-gated.
 
----
+## What's DONE and verified (this session)
 
-## Current state — what works, what doesn't
+- **AI provider abstraction** — OpenAI default (`gpt-5.5`), Bedrock + offline swappable, graceful
+  fallback. All existing routers repointed off the old Bedrock client. (`app/services/ai/`)
+- **Persistence** — async SQLAlchemy + 5 tenant-scoped models + Alembic migration + SQLite default.
+- **K8s control-plane brain** — `/v1/k8s/diagnose|remediate|snapshot|incidents|overview|audit` +
+  `WS /v1/k8s/stream`. RCA engine with LLM path **and** a rich deterministic fallback.
+- **Operator** (`operators/k8s`) — kopf handlers (live), pure detectors (9 unit tests pass),
+  remediator, **simulator** (`--sim`, no cluster), `RemediationPolicy` CRD, least-priv RBAC, Dockerfile.
+- **packages/core** — shared TS types + typed REST/WebSocket client (was empty).
+- **Dashboard** (`apps/dashboard`) — Next.js 15 live command center. Built, runs, **screenshot-verified**
+  showing live incidents → AI root cause → remediation → heal. Has a one-click "Run live demo".
+- **Demo harness** (`demo/`) — `run-local` + `sim` (no cluster, tested end-to-end) + `up`/`down` (kind)
+  + broken workloads + talk track.
+- **Helm chart** (`deploy/helm/devforge-os`) + raw manifests + EKS guide. All YAML validated.
+- **VS Code extension** — "Cluster Incidents" tree view (live), builds to .vsix.
+- **Rust CLI** — `devforge cluster status|watch|incidents` (written; not compiled — no cargo here).
+- **Marketing** — repositioned to the self-healing-K8s + OpenAI story (hero, features, how-it-works,
+  modes→co-pilot/autopilot, tech-stack, CTA). Builds clean.
+- **Infra/CDK** — App Runner control plane now wires `AI_PROVIDER`/`OPENAI_MODEL`/`OPENAI_API_KEY`. Synths clean.
+- **Tests/quality** — backend `pytest` 24 passed (~70% cov), operator `pytest` 9 passed, `ruff` clean,
+  all TS workspaces typecheck, dashboard + marketing build.
 
-### ✅ Working & verified
-
-- **`pnpm install`** clean (420 packages)
-- **`pnpm --filter @devforge/marketing build`** → 64.5 kB route, 170 kB first-load JS
-- **`pnpm --filter @devforge/marketing dev`** → ready in 1.8 s, renders correctly
-- **`pnpm --filter devforge-vscode build`** → 16.5 kB extension bundle
-- **`pnpm --filter devforge-vscode package`** → 32.76 kB `.vsix` (sitting at `apps/extension/devforge-vscode.vsix`)
-- **Backend boots** via `uvicorn app.main:app` — 16 routes registered, `/health` returns 200 in 9 ms
-- **Deterministic backend endpoints tested via curl:**
-  - `POST /v1/security/scan` → finds hardcoded secrets, open SGs, public S3
-  - `POST /v1/cost` → realistic AWS price estimates (RDS, EC2, S3 per-GB, etc.)
-  - `POST /v1/patterns/detect` → catches nested loops + maps to LeetCode
-- **CDK** typechecks + synthesizes a clean CloudFormation template
-- **Typecheck passes** on all TS workspaces (tokens, ui, marketing, extension, cdk)
-
-### 🚧 Wired but not yet exercised against live AWS
-
-- **Bedrock-backed endpoints** (`/v1/analysis`, `/v1/drift`, `/v1/risk`, `/v1/blueprints/generate`, `/v1/mentor/chat`, `/v1/quiz/generate`, `/v1/diagnose`) — code is complete with retry + JSON extraction, untested because no Bedrock model invocation has happened yet (the AWS deploy is the blocker)
-- **Auth** — currently API-key (`X-API-Key: dev-local-key`) + `X-Tenant-Id` header. Clerk/Cognito not yet wired. Multi-tenant middleware in place; expects a real JWT verifier as Phase 1 work.
-
-### ❌ Not started
-
-- **Postgres + SQLAlchemy** — `app/db/` and `app/models/` don't exist yet; blueprints are in-memory only
-- **Redis caching** — config knob exists, no client
-- **WebSocket fanout** — for live drift/cost updates to extension
-- **CI/CD agent** (Phase 4) — GitHub App for autonomous PR fixes
-- **K8s operator** (Phase 5)
-- **Stripe billing**, audit log UI, dashboard web app
-
----
-
-## Deploy state (the big one)
-
-**Backend is NOT live on AWS yet.** All deploy artefacts exist but `cdk deploy`
-was deferred because credentials weren't available in the previous session.
-
-What's ready for you:
-- `infra/cdk/lib/control-plane-stack.ts` — App Runner + ECR + IAM (Bedrock least-priv)
-- `services/control-plane/Dockerfile` — multi-stage, non-root, healthcheck
-- `DEPLOY.md` — step-by-step (sections 1.1 → 1.7) — total ~10 minutes once you have AWS creds
-
-**Marketing site:** Not on Vercel yet. Builds locally. `DEPLOY.md` section 2 explains the Vercel setup (5 min).
-
-**Extension:** `.vsix` is built. Install via `code --install-extension apps/extension/devforge-vscode.vsix`. Configure with `Ctrl+Shift+P → "DevForge: Set API URL"` once the backend is live.
-
----
-
-## To run locally right now
+## Run it right now
 
 ```powershell
-# 1. Backend (terminal 1)
-cd D:\Forge\services\control-plane
-.venv\Scripts\Activate.ps1            # venv already created in previous session
+# 1. control plane
+cd D:\Forge\services\control-plane; .venv\Scripts\Activate.ps1
 python -m uvicorn app.main:app --reload --port 8000
-# → http://localhost:8000/docs
-
-# 2. Marketing site (terminal 2)
-cd D:\Forge
-pnpm --filter @devforge/marketing dev
-# → http://localhost:3000
-
-# 3. Install extension (one-time)
-cd D:\Forge\apps\extension
-code --install-extension devforge-vscode.vsix
-
-# 4. Smoke-test backend (terminal 3)
-curl http://localhost:8000/health
-curl -X POST http://localhost:8000/v1/security/scan `
-  -H "Content-Type: application/json" `
-  -H "X-Tenant-Id: local" `
-  -d '{"scan_type":"code","target":{"content":"password = \"x\"","type":"terraform"}}'
+# 2. dashboard  → http://localhost:3001
+cd D:\Forge; pnpm --filter @devforge/dashboard dev
+# 3. drive the heal loop (or click "Run live demo" in the dashboard)
+cd D:\Forge; ./demo/sim.ps1 -Loop
 ```
 
----
+## YOUR manual steps (only these remain)
 
-## Bugs found and fixed in the previous session
+1. **OpenAI key (1 min, optional but recommended):** put `OPENAI_API_KEY=sk-...` in
+   `services/control-plane/.env`. Without it the deterministic engine runs an identical demo.
+2. **Live kind cluster (optional):** install Docker Desktop + kind + helm, then `./demo/up.sh`.
+   (This build env had no Docker/kind, so the live-cluster path is unrun — the **sim path is fully tested**.)
+3. **Compile the Rust CLI (optional):** `cd services/cli && cargo build --release` (no cargo in build env).
+4. **Cloud (optional):** App Runner via `infra/cdk` (see `DEPLOY.md`), or EKS via `deploy/eks`.
+5. **Push to GitHub:** see below.
 
-These are documented so you know what was already debugged:
+## Push to GitHub (hash066/Forge)
 
-1. **`packages/tokens/src/tailwind-preset.ts`** — `as const` typography tokens
-   conflicted with Tailwind's type expectations. Fixed via cast + `Object.fromEntries`
-   string coercion. Watch out if you reorganise the token exports.
+`gh` is authed as **hash066** (active). Use the gh credential helper to avoid the TheClazer mismatch:
 
-2. **`apps/marketing/src/app/globals.css`** — `@layer base` in the tokens package
-   broke Tailwind compilation because `@tailwind base` lives in the consumer.
-   Tokens CSS is now plain CSS (no `@layer`); utility helpers live in the
-   marketing app's globals.
-
-3. **`services/control-plane/app/routers/v1/cost.py`** — S3 cost always returned
-   $0 because the price lookup built `s3:default` while the table key was
-   `s3:standard`. Fixed: S3 is special-cased separately.
-
-4. **`services/control-plane/app/routers/v1/security.py`** — IAM wildcard regex
-   had six consecutive quotes that broke Python parsing. Switched to single-
-   quoted r-string.
-
-5. **`services/control-plane/app/main.py`** — removed deprecated `ORJSONResponse`
-   (FastAPI now serializes via Pydantic directly).
-
----
-
-## The 3-hour to-do for the next session
-
-Ordered by priority. First three are the critical path.
-
-### 1. **Actually deploy the backend to AWS** ⚡ (~15 min)
-
-Read `DEPLOY.md` section 1 verbatim. You need:
-- AWS CLI installed (`winget install Amazon.AWSCLI`)
-- An IAM user with admin (or scoped IAM with App Runner + ECR + Bedrock perms)
-- Bedrock Claude Sonnet 4 access granted in your AWS account/region
-- Docker Desktop running (for the image build/push)
-
-Then in order:
-```powershell
-aws configure                              # one-time
-cd D:\Forge\infra\cdk
-pnpm install
-pnpm bootstrap                             # one-time per account/region
-pnpm deploy                                # creates ECR + IAM + App Runner skeleton
-# (App Runner will fail until image exists — that's expected)
-
-# Build + push image
-$ACCOUNT = (aws sts get-caller-identity --query Account --output text)
-$REPO = "${ACCOUNT}.dkr.ecr.ap-south-1.amazonaws.com/devforge-control-plane"
-aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin $REPO
-cd D:\Forge
-docker build -t devforge-control-plane:latest services/control-plane
-docker tag devforge-control-plane:latest "${REPO}:latest"
-docker push "${REPO}:latest"
-
-# Wait ~3 min for App Runner to redeploy, then:
-curl https://<ServiceUrl-from-cdk-output>/health
+```bash
+git add -A && git commit -m "feat: DevForge OS — autonomous AI SRE for Kubernetes"
+git -c credential.helper= -c "credential.helper=!gh auth git-credential" push origin main
 ```
 
-If Bedrock isn't available in ap-south-1, change `bin/devforge.ts` line 22 to `us-east-1` or `us-west-2`.
+## Architecture cheat-sheet
 
-### 2. **Deploy marketing site to Vercel** (~5 min)
+- AI seam: `app/services/ai/factory.py::get_ai_provider()` → returns OpenAI/Bedrock/offline provider.
+- RCA: `app/services/k8s_rca.py` — `diagnose(provider, ctx)` tries LLM, falls back to `deterministic_rca`.
+- Live events: `app/services/eventbus.py` → `WS /v1/k8s/stream` → dashboard `useClusterFeed` hook.
+- Operator detectors: `operators/k8s/devforge_operator/detectors.py` (`scan_pod`, `scan_deployment_rollout`).
+- Dashboard data: `apps/dashboard/src/hooks/useClusterFeed.ts` (+ `runDemo` self-drives via the core client).
 
-`DEPLOY.md` section 2. Connect the GitHub repo, set root dir to `apps/marketing`,
-override the build command to install at monorepo root first, set env vars
-(`NEXT_PUBLIC_API_URL` = the App Runner URL from step 1).
+## Gotchas / decisions (don't re-discover these)
 
-### 3. **End-to-end smoke test** (~10 min)
+- **Windows console + Unicode**: set `PYTHONUTF8=1` when running Python that prints em-dashes/arrows.
+- **Two SQLite files if you run two control planes** — they share `./devforge.db` by cwd; use a separate
+  `DATABASE_URL` (e.g. `demo.db`) or stop the other instance (the `rm devforge.db` fails on a file lock).
+- **Dashboard timestamps** treat tz-naive backend times as UTC (see `lib/format.ts::timeAgo`).
+- **Ruff** is configured for the FastAPI/SQLAlchemy stack (Depends whitelist, lazy-import allowance,
+  line-length 120). Keep it green.
+- The old plan file: `C:\Users\Rayyan Shaikh\.claude\plans\reconstruct-everything-from-the-delightful-llama.md`.
 
-- Install the extension: `code --install-extension apps/extension/devforge-vscode.vsix`
-- `Ctrl+Shift+P → DevForge: Set API URL` → paste your App Runner URL
-- Open any `.tf` file, write `password = "hunter2"` → save
-- Confirm: red diagnostic appears + critical-gate modal pops + status bar shows finding count
-- Open a Python file with `boto3.client('s3')` → save → status bar shows live cost estimate
+## If you have more time (highest leverage next)
 
-If all three pass, you're shipped.
+1. Set `OPENAI_API_KEY` and run the sim — confirm the LLM RCA path produces richer diagnoses than the
+   deterministic fallback (provider badge in the dashboard flips to `OpenAI · gpt-5.5`).
+2. Run `./demo/up.sh` on a machine with Docker/kind and validate the live operator end-to-end; capture a GIF.
+3. Wire Clerk JWT in `app/middleware/tenant.py` (replace the `X-Tenant-Id`/`anonymous` default).
+4. Add Redis caching of RCA by incident signature to cut OpenAI cost/latency on repeats.
 
-### 4. **Phase 1 backlog** (if you have time after the demo)
-
-In priority order:
-- **Postgres wiring**: add `app/db/session.py`, SQLAlchemy 2.0 async, Alembic for migrations, RLS policies. Models live at `app/models/`. The schemas in `app/schemas/` already exist — turn them into SQLAlchemy mappings.
-- **Clerk JWT verification**: replace the `tenant_id` header lookup in `app/middleware/tenant.py` with real Clerk JWKS verification. Set `CLERK_*` env vars on App Runner.
-- **Redis caching** on `/v1/analysis` and `/v1/risk` keyed by `sha256(code)` — saves Bedrock costs by ~70 % for hot files.
-
----
-
-## Things to know before you touch the code
-
-- **Don't `as const` Tailwind tokens.** See bug #1 above.
-- **The `.claude/` folder is gitignored** but if a future session creates a `CLAUDE.md` (e.g. via `/init`), it goes IN the repo as project memory — that's intentional.
-- **Don't commit `cdk.out/`** — it's gitignored. Each `cdk deploy` regenerates it.
-- **Don't commit the `.vsix`** — also gitignored; the build step regenerates it.
-- **Don't add an `icon: media/icon.png` field to the extension manifest** until you actually create the PNG. Marketplace requires it; local install doesn't.
-- **Region** is `ap-south-1` everywhere. If you switch, update three places:
-  `infra/cdk/bin/devforge.ts:22`, the Bedrock ARNs in
-  `infra/cdk/lib/control-plane-stack.ts`, and `DEPLOY.md`.
-
----
-
-## Quick reference
-
-| What | Where |
-|---|---|
-| Deploy guide | `DEPLOY.md` |
-| Architecture diagram | `README.md` (Mermaid) |
-| Original product vision | `context.md` |
-| Design tokens | `packages/tokens/src/` |
-| UI components | `packages/ui/src/components/` |
-| Marketing pages | `apps/marketing/src/app/page.tsx` + `components/sections/` |
-| Backend routes | `services/control-plane/app/routers/v1/` |
-| AI prompts | `services/control-plane/app/services/prompts.py` |
-| Extension entry | `apps/extension/src/extension.ts` |
-| CDK stack | `infra/cdk/lib/control-plane-stack.ts` |
-| CLI entry | `services/cli/src/main.rs` |
-
----
-
-**Open questions for the next session**
-
-- Decide Clerk vs Cognito for auth (lean Clerk; faster integration).
-- Do we ship a `apps/dashboard` (auth'd web app) in Phase 4 or keep all dashboard surfaces in the extension?
-- Kiro extension parity — VS Code extension API is mostly compatible. Test on Kiro early and surface any Kiro-only quirks.
-
-Good luck. Read `DEPLOY.md` first.
+Good luck. The demo always works offline — lead with `./demo/sim` + the dashboard.

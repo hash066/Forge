@@ -10,7 +10,7 @@ from pydantic import Field
 
 from app.deps import TenantContext, tenant_context
 from app.schemas.common import AnalysisMetadata, Language, StrictModel
-from app.services.bedrock import BedrockError, get_bedrock_client
+from app.services.ai import AIProviderError, get_ai_provider
 from app.services.prompts import SYSTEM_PROMPT, generate_quiz
 
 router = APIRouter(prefix="/quiz", tags=["student"])
@@ -37,11 +37,13 @@ async def generate(
     ctx: TenantContext = Depends(tenant_context),
 ) -> QuizResponse:
     start = time.perf_counter()
-    bedrock = get_bedrock_client()
+    provider = get_ai_provider()
     prompt = generate_quiz(payload.code, payload.language)
     try:
-        result = await bedrock.invoke(prompt, system=SYSTEM_PROMPT, temperature=0.5, max_tokens=1000)
-    except BedrockError as exc:
+        result = await provider.generate(
+            prompt, system=SYSTEM_PROMPT, temperature=0.5, max_tokens=1000, json=True
+        )
+    except AIProviderError as exc:
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
     parsed = result.json_payload or {}
     return QuizResponse(

@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from app.deps import TenantContext, tenant_context
 from app.schemas.analysis import RiskRequest, RiskResponse
 from app.schemas.common import AnalysisMetadata, RiskScores
-from app.services.bedrock import BedrockError, get_bedrock_client
+from app.services.ai import AIProviderError, get_ai_provider
 from app.services.prompts import SYSTEM_PROMPT, calculate_risk
 
 router = APIRouter(prefix="/risk", tags=["analysis"])
@@ -22,11 +22,11 @@ async def score(
     ctx: TenantContext = Depends(tenant_context),
 ) -> RiskResponse:
     start = time.perf_counter()
-    bedrock = get_bedrock_client()
+    provider = get_ai_provider()
     prompt = calculate_risk(architecture=payload.architecture, context=payload.context)
     try:
-        result = await bedrock.invoke(prompt, system=SYSTEM_PROMPT, temperature=0.1)
-    except BedrockError as exc:
+        result = await provider.generate(prompt, system=SYSTEM_PROMPT, temperature=0.1, json=True)
+    except AIProviderError as exc:
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
 
     parsed = result.json_payload or {}

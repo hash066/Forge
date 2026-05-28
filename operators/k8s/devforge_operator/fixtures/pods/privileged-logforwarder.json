@@ -1,0 +1,22 @@
+{
+  "metadata": { "name": "log-forwarder-9d8c7b6a5f-tt71k", "namespace": "observability" },
+  "spec": {
+    "containers": [
+      {
+        "name": "log-forwarder",
+        "image": "observability/fluentbit:2.2",
+        "securityContext": { "privileged": true, "runAsUser": 0 },
+        "resources": { "requests": { "cpu": "50m", "memory": "64Mi" }, "limits": { "cpu": "200m", "memory": "128Mi" } }
+      }
+    ],
+    "volumes": [
+      { "name": "varlog", "hostPath": { "path": "/var/log" } }
+    ]
+  },
+  "status": {
+    "phase": "Running",
+    "containerStatuses": [
+      { "name": "log-forwarder", "ready": true, "restartCount": 0, "state": { "running": { "startedAt": "2026-05-28T16:00:00Z" } } }
+    ]
+  }
+}

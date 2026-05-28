@@ -1,0 +1,25 @@
+{
+  "metadata": { "name": "payments-api-6f9c7d8b5c-q4x2t", "namespace": "shop" },
+  "spec": {
+    "containers": [
+      {
+        "name": "payments-api",
+        "image": "shop/payments-api:v2.4.0",
+        "resources": { "requests": { "cpu": "100m", "memory": "128Mi" }, "limits": { "cpu": "500m", "memory": "256Mi" } },
+        "readinessProbe": { "httpGet": { "path": "/healthz", "port": 8080 }, "initialDelaySeconds": 3, "timeoutSeconds": 1 }
+      }
+    ]
+  },
+  "status": {
+    "phase": "Running",
+    "containerStatuses": [
+      {
+        "name": "payments-api",
+        "ready": false,
+        "restartCount": 7,
+        "state": { "waiting": { "reason": "CrashLoopBackOff", "message": "back-off 5m0s restarting failed container" } },
+        "lastState": { "terminated": { "reason": "Error", "exitCode": 1 } }
+      }
+    ]
+  }
+}

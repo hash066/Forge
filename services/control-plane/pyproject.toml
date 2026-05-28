@@ -13,8 +13,10 @@ dependencies = [
     "pydantic-settings>=2.7.0",
     "python-multipart>=0.0.20",
     "httpx>=0.28.1",
+    "openai>=1.55.0",
     "boto3>=1.35.85",
     "sqlalchemy[asyncio]>=2.0.36",
+    "aiosqlite>=0.20.0",
     "asyncpg>=0.30.0",
     "alembic>=1.14.0",
     "redis>=5.2.1",
@@ -22,6 +24,7 @@ dependencies = [
     "python-jose[cryptography]>=3.3.0",
     "tenacity>=9.0.0",
     "orjson>=3.10.13",
+    "websockets>=14.1",
 ]
 
 [project.optional-dependencies]
@@ -43,7 +46,7 @@ build-backend = "hatchling.build"
 packages = ["app"]
 
 [tool.ruff]
-line-length = 100
+line-length = 120
 target-version = "py312"
 
 [tool.ruff.lint]
@@ -51,10 +54,37 @@ select = [
     "E", "F", "W", "I", "N", "B", "A", "C4", "DTZ", "T20", "RET", "SIM",
     "ARG", "PTH", "PL", "RUF",
 ]
-ignore = ["PLR0913", "PLR0911"]
+ignore = [
+    "PLR0913",
+    "PLR0911",
+    "PLR0912", # many branches — remediator/detector dispatch is inherently branchy
+    "PLR0915",
+    "PLR2004", # magic values — thresholds/HTTP codes read fine inline
+    "RUF001", # ambiguous unicode in strings — we use em/en dashes deliberately in prose
+    "RUF002",
+    "RUF003",
+    "RUF012", # SQLAlchemy/Pydantic class attrs aren't ClassVar mutable defaults
+    "ARG001", # protocol/handler conformance — some args are intentionally unused
+    "ARG002",
+    "PLC0415", # intentional lazy imports (optional SDKs, avoid import cost at boot)
+]
+
+# FastAPI's Depends()/Query()/etc. as argument defaults are the framework idiom,
+# not the B008 anti-pattern — treat them as immutable.
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.Query",
+    "fastapi.Header",
+    "fastapi.Path",
+    "fastapi.Body",
+]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["PLR2004", "S101", "ARG"]
+"tests/*" = ["PLR2004", "S101", "ARG", "E501"]
+# Prompt templates embed long JSON schema example lines intentionally.
+"app/services/prompts.py" = ["E501"]
+"app/services/k8s_rca.py" = ["E501"]
 
 [tool.mypy]
 python_version = "3.12"

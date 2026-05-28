@@ -1,0 +1,10 @@
+# A small kind cluster for the DevForge OS demo. One control-plane + two small
+# workers so the "Unschedulable" workload (8 CPU / 32Gi) realistically can't be
+# placed, while the other workloads schedule fine.
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: devforge
+nodes:
+  - role: control-plane
+  - role: worker
+  - role: worker

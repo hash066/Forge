@@ -1,0 +1,18 @@
+[project]
+name = "devforge-operator"
+version = "0.1.0"
+description = "DevForge OS — autonomous Kubernetes SRE operator"
+requires-python = ">=3.11"
+dependencies = [
+    "kopf>=1.37.2",
+    "kubernetes>=31.0.0",
+    "httpx>=0.28.1",
+    "structlog>=24.4.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.3.4"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

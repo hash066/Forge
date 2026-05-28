@@ -1,31 +1,31 @@
 'use client';
 import { Container, GlassCard, GradientText, Reveal, VerifiedBadge } from '@devforge/ui';
-import { FileCode2, Brain, ShieldCheck } from 'lucide-react';
+import { Boxes, Brain, ShieldCheck } from 'lucide-react';
 
 const STEPS = [
   {
     n: '01',
-    icon: FileCode2,
-    title: 'Declare your architecture',
+    icon: Boxes,
+    title: 'Install the operator',
     blurb:
-      'Define scale, budget, team size, and the architectural constraints that matter. DevForge generates a visual blueprint in seconds — components, connections, cost estimate, scaling forecast.',
-    chip: { tone: 'brand' as const, label: 'Blueprint generated < 10s' },
+      'One Helm command installs the operator and control plane with least-privilege RBAC. It immediately starts watching every namespace you allow — no sidecars, no mesh, no rules to write.',
+    chip: { tone: 'brand' as const, label: 'helm install · < 1 min' },
   },
   {
     n: '02',
     icon: Brain,
-    title: 'Code with a watchful mentor',
+    title: 'It watches & diagnoses',
     blurb:
-      'DevForge runs in the background — tree-sitter parsing every change, comparing against your blueprint, scoring risk in four dimensions, asking questions in plain English when something feels off.',
-    chip: { tone: 'ai' as const, label: 'Claude Sonnet 4 · live' },
+      'Deterministic detectors catch faults the instant they happen, then hand full context — events, logs, spec, metrics — to OpenAI for a root-cause analysis and a concrete fix, with a confidence score.',
+    chip: { tone: 'ai' as const, label: 'gpt-5.5 · live' },
   },
   {
     n: '03',
     icon: ShieldCheck,
-    title: 'Ship with gates that hold',
+    title: 'It heals — you stay in control',
     blurb:
-      'Critical issues — hardcoded secrets, cost blowouts, drift — become blocking modals. Pass the gates, ship the code. Audit log keeps the receipts. The CI/CD agent (Phase 4) opens the PR fix.',
-    chip: { tone: 'verified' as const, label: 'Audit-trail backed' },
+      'Low-risk fixes auto-apply; risky ones wait for one-click approval per your RemediationPolicy. Every action streams to the dashboard and lands in the immutable audit log.',
+    chip: { tone: 'verified' as const, label: 'policy-gated · audited' },
   },
 ];
 
@@ -36,11 +36,11 @@ export function HowItWorks() {
         <Reveal className="mx-auto max-w-3xl text-center">
           <span className="text-micro font-semibold text-brand-400">How it works</span>
           <h2 className="mt-3 text-display-lg font-bold tracking-tight">
-            Three steps from blueprint to <GradientText variant="brand">production</GradientText>.
+            Three steps from pager storm to <GradientText variant="brand">calm</GradientText>.
           </h2>
           <p className="mt-5 text-body-lg text-foreground-secondary">
-            No agents to configure, no rules to write. DevForge installs as a single extension and
-            reads your code, your blueprint, and your repo history.
+            No runbooks to maintain, no rules to write. DevForge OS installs once and reasons about
+            your cluster the way a senior SRE would — then does the work.
           </p>
         </Reveal>
 

@@ -15,7 +15,7 @@ from pydantic import Field
 
 from app.deps import TenantContext, tenant_context
 from app.schemas.common import AnalysisMetadata, StrictModel
-from app.services.bedrock import BedrockError, get_bedrock_client
+from app.services.ai import AIProviderError, get_ai_provider
 from app.services.prompts import SYSTEM_PROMPT
 
 router = APIRouter(prefix="/blueprints", tags=["blueprints"])
@@ -74,12 +74,14 @@ async def generate(
     ctx: TenantContext = Depends(tenant_context),
 ) -> Blueprint:
     start = time.perf_counter()
-    bedrock = get_bedrock_client()
+    provider = get_ai_provider()
 
     prompt = _build_blueprint_prompt(payload)
     try:
-        result = await bedrock.invoke(prompt, system=SYSTEM_PROMPT, temperature=0.3, max_tokens=3000)
-    except BedrockError as exc:
+        result = await provider.generate(
+            prompt, system=SYSTEM_PROMPT, temperature=0.3, max_tokens=3000, json=True
+        )
+    except AIProviderError as exc:
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
 
     parsed = result.json_payload or {}
