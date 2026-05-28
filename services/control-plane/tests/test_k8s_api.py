@@ -88,3 +88,34 @@ async def test_overview_and_audit(client: AsyncClient):
 
     audit = (await client.get("/v1/k8s/audit")).json()
     assert any(a["action"] == "incident.diagnosed" for a in audit)
+
+
+@pytest.mark.asyncio
+async def test_remediation_policy_governs_mode(client: AsyncClient):
+    """Settings must actually change behaviour: policy mode overrides the RCA mode."""
+    h = {"X-Tenant-Id": "policy-test"}  # isolate from other tests' default tenant
+    oom = {"namespace": "shop", "name": "pol-a-1", "reason": "OOMKilled", "severity": "high"}
+
+    # No policy yet → OOM auto-heals (the rule's own mode).
+    d1 = (await client.post("/v1/k8s/diagnose", json=oom, headers=h)).json()
+    assert d1["status"] == "remediating"
+
+    # Switch the tenant policy to "suggest".
+    put = await client.put("/v1/k8s/settings", json={"mode": "suggest"}, headers=h)
+    assert put.status_code == 200
+    assert put.json()["policy"]["mode"] == "suggest"
+
+    # A new incident now waits for approval instead of auto-healing.
+    d2 = (
+        await client.post(
+            "/v1/k8s/diagnose",
+            json={**oom, "name": "pol-b-1"},
+            headers=h,
+        )
+    ).json()
+    assert d2["status"] == "suggested"
+
+    # GET settings reflects the persisted policy + AI status.
+    s = (await client.get("/v1/k8s/settings", headers=h)).json()
+    assert s["policy"]["mode"] == "suggest"
+    assert "ai_provider" in s and "ai_connected" in s
