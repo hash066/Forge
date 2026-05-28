@@ -1,16 +1,25 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { BrainCircuit, Check, ChevronRight, Sparkles, Terminal } from 'lucide-react';
+import { Check, ChevronRight, Sparkles, Terminal } from 'lucide-react';
 import type { Incident } from '@devforge/core';
-import {
-  actionLabel,
-  confidencePct,
-  riskPalette,
-  severityPalette,
-  statusMeta,
-  timeAgo,
-} from '@/lib/format';
+import { ReasoningStream } from './incidents/reasoning-stream';
+import { actionLabel, riskPalette, severityPalette, statusMeta, timeAgo } from '@/lib/format';
+
+function buildToolTrace(incident: Incident): { tool: string; arg: string; result: string }[] {
+  const ev = (incident.evidence ?? []) as unknown[];
+  const trim = (s: string) => (s.length > 52 ? `${s.slice(0, 49)}…` : s);
+  const steps = [
+    {
+      tool: 'get_events',
+      arg: `${incident.namespace}/${incident.name}`,
+      result: trim(String(ev[0] ?? incident.reason)),
+    },
+  ];
+  if (ev[1]) steps.push({ tool: 'get_pod_logs', arg: incident.name, result: trim(String(ev[1])) });
+  if (ev[2]) steps.push({ tool: 'describe_pod', arg: incident.name, result: trim(String(ev[2])) });
+  return steps;
+}
 
 interface IncidentCardProps {
   incident: Incident;
@@ -71,18 +80,15 @@ export function IncidentCard({ incident, onApprove }: IncidentCardProps) {
           </span>
         </div>
 
-        {/* AI root cause */}
-        <div className="mt-3 rounded-lg border border-ai/20 bg-ai/[0.06] p-3">
-          <div className="flex items-center justify-between">
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-ai">
-              <BrainCircuit className="h-3.5 w-3.5" />
-              AI root cause
-            </span>
-            <span className="font-mono text-[11px] text-foreground-tertiary">
-              {confidencePct(incident.confidence)} confidence
-            </span>
-          </div>
-          <p className="mt-1.5 text-sm leading-relaxed text-foreground">{incident.root_cause}</p>
+        {/* AI investigation + reasoning (typewriter while active) */}
+        <div className="mt-3">
+          <ReasoningStream
+            text={incident.root_cause}
+            tools={buildToolTrace(incident)}
+            active={incident.status !== 'resolved' && incident.status !== 'failed'}
+            model={incident.model_used}
+            confidence={incident.confidence}
+          />
         </div>
 
         {/* remediation */}
