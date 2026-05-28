@@ -5,6 +5,7 @@ import { AlertCircle, MessageSquareText, SendHorizonal } from 'lucide-react';
 import type { AskResponse, AuditEntry, ClusterSnapshot, Incident } from '@devforge/core';
 import { useClusterFeed } from '@/hooks/useClusterFeed';
 import { ReasoningStream } from '@/components/incidents/reasoning-stream';
+import { Sparkline } from '@/components/ui/sparkline';
 import { ActivityRail } from '@/components/activity-rail';
 import { HealthRing } from '@/components/health-ring';
 import { IncidentFeed } from '@/components/incident-feed';
@@ -106,6 +107,7 @@ export default function DashboardPage() {
                   <StatCards stats={feed.stats} snapshot={snapshot} />
                 </div>
               </div>
+              <TrendsPanel healthHistory={feed.healthHistory} stats={feed.stats} snapshot={snapshot} />
               <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
                 <IncidentFeed
                   incidents={feed.incidents}
@@ -157,6 +159,48 @@ export default function DashboardPage() {
 }
 
 /* ── lightweight views (real data, no new deps) ─────────────────────────────── */
+
+function TrendsPanel({
+  healthHistory,
+  stats,
+  snapshot,
+}: {
+  healthHistory: number[];
+  stats: { total: number; resolved: number };
+  snapshot: ClusterSnapshot | null;
+}) {
+  const healRate = stats.total ? Math.round((stats.resolved / stats.total) * 100) : 100;
+  const cur = healthHistory.length
+    ? healthHistory[healthHistory.length - 1]
+    : (snapshot?.health_score ?? 100);
+  return (
+    <div className="panel p-5">
+      <div className="flex items-center justify-between">
+        <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-foreground-tertiary">
+          Cluster health · live trend
+        </span>
+        <span className="font-mono text-[11px] text-foreground-tertiary">
+          {healthHistory.length} readings
+        </span>
+      </div>
+      <div className="mt-3 flex items-center gap-6">
+        <div className="font-display text-[2rem] font-semibold leading-none tabular-nums">
+          {Math.round(cur)}
+          <span className="text-base text-foreground-tertiary">%</span>
+        </div>
+        <div className="min-w-0 flex-1">
+          <Sparkline data={healthHistory} height={48} color="hsl(var(--verified-500))" min={0} max={100} />
+        </div>
+        <div className="text-right">
+          <div className="font-display text-[1.5rem] font-semibold tabular-nums text-brand-400">
+            {healRate}%
+          </div>
+          <div className="text-[11px] text-foreground-tertiary">auto-heal rate</div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function ModePill({ mode }: { mode: string }) {
   const live = mode === 'live';

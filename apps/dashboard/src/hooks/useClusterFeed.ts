@@ -38,6 +38,7 @@ export interface FeedState {
   reasoning: Record<string, string>;
   tools: Record<string, ToolStep[]>;
   mode: string;
+  healthHistory: number[];
 }
 
 function computeStats(incidents: Incident[]): IncidentStats {
@@ -66,6 +67,7 @@ export function useClusterFeed() {
   const remediationByIncident = useRef<Map<string, string>>(new Map());
   const reasoningRef = useRef<Record<string, string>>({});
   const toolsRef = useRef<Record<string, ToolStep[]>>({});
+  const healthHistoryRef = useRef<number[]>([]);
   const mounted = useRef(true);
 
   const [state, setState] = useState<FeedState>({
@@ -81,6 +83,7 @@ export function useClusterFeed() {
     reasoning: {},
     tools: {},
     mode: 'simulated',
+    healthHistory: [],
   });
 
   const flushIncidents = useCallback(() => {
@@ -145,7 +148,14 @@ export function useClusterFeed() {
         ].slice(-3);
         setState((s) => ({ ...s, tools: { ...toolsRef.current } }));
       } else if (event.type === 'snapshot') {
-        setState((s) => ({ ...s, snapshot: event.snapshot }));
+        healthHistoryRef.current = [...healthHistoryRef.current, event.snapshot.health_score].slice(
+          -40,
+        );
+        setState((s) => ({
+          ...s,
+          snapshot: event.snapshot,
+          healthHistory: [...healthHistoryRef.current],
+        }));
       }
     };
 
@@ -170,11 +180,13 @@ export function useClusterFeed() {
         if (!mounted.current) return;
         for (const i of ov.recent_incidents) incidentsRef.current.set(i.id, i);
         flushIncidents();
+        if (ov.snapshot) healthHistoryRef.current = [ov.snapshot.health_score];
         setState((s) => ({
           ...s,
           snapshot: ov.snapshot,
           remediations: ov.recent_remediations,
           mode: ov.mode ?? s.mode,
+          healthHistory: [...healthHistoryRef.current],
           providerModel:
             ov.recent_incidents.find((i) => i.model_used)?.model_used ?? s.providerModel,
         }));
