@@ -4,6 +4,7 @@
  */
 
 import type {
+  AskResponse,
   AuditEntry,
   ClusterSnapshotInput,
   DiagnoseResponse,
@@ -91,6 +92,11 @@ export class DevForgeClient {
 
   snapshot(input: ClusterSnapshotInput): Promise<{ ok: boolean; detail: string }> {
     return this.post("/v1/k8s/snapshot", input);
+  }
+
+  /** Natural-language Q&A over live cluster state ("Ask your cluster"). */
+  ask(question: string): Promise<AskResponse> {
+    return this.post<AskResponse>("/v1/k8s/ask", { question });
   }
 
   async isHealthy(): Promise<boolean> {

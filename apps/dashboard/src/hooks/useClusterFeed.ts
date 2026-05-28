@@ -257,5 +257,7 @@ export function useClusterFeed() {
     [client],
   );
 
-  return { ...state, runDemo, approveIncident };
+  const ask = useCallback((question: string) => client.ask(question), [client]);
+
+  return { ...state, runDemo, approveIncident, ask };
 }

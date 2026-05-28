@@ -161,6 +161,13 @@ export interface DiagnoseResponse {
   cached: boolean;
 }
 
+export interface AskResponse {
+  answer: string;
+  sources: string[];
+  model_used: string;
+  provider: string;
+}
+
 export interface ClusterSnapshotInput {
   cluster?: string;
   nodes?: number;

@@ -266,3 +266,33 @@ def diagnose_k8s_incident(context: dict) -> str:
         }}
         """,
     ).strip()
+
+
+# ── "Ask your cluster" — natural-language Q&A over live state ───────────────────
+CLUSTER_ADVISOR_SYSTEM = textwrap.dedent(
+    """
+    You are DevForge OS, an autonomous SRE assistant. Answer the operator's question
+    about THEIR Kubernetes cluster using ONLY the live state provided (a cluster
+    snapshot + recent incidents). Be concrete and concise:
+      - cite specific namespaces, workloads, and incident reasons,
+      - reference an incident as "namespace/name (Reason)",
+      - if the provided state does not contain the answer, say so plainly.
+    Prefer 2–5 sentences. Never invent data that is not in the provided state.
+    """
+).strip()
+
+
+def ask_cluster(question: str, context: dict) -> str:
+    """Build the user prompt for the natural-language cluster advisor."""
+    context_json = _json.dumps(context, indent=2, default=str)[:6000]
+    return textwrap.dedent(
+        f"""
+        Operator question:
+        {question}
+
+        Live cluster state (JSON):
+        {context_json}
+
+        Answer the question directly and concisely, using only this state.
+        """
+    ).strip()

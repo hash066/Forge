@@ -43,12 +43,44 @@ from app.schemas.k8s import (
     RemediationOut,
     SnapshotOut,
 )
+from pydantic import Field
+
+from app.schemas.common import StrictModel
 from app.services import k8s_rca
-from app.services.ai import get_ai_provider
+from app.services.ai import AIProviderError, get_ai_provider
 from app.services.eventbus import get_event_bus
+from app.services.prompts import CLUSTER_ADVISOR_SYSTEM, ask_cluster
 
 logger = structlog.get_logger(__name__)
 router = APIRouter(prefix="/k8s", tags=["kubernetes"])
+
+
+class AskRequest(StrictModel):
+    question: str = Field(..., min_length=3, max_length=2000)
+
+
+class AskResponse(StrictModel):
+    answer: str
+    sources: list[str]
+    model_used: str
+    provider: str
+
+
+def _offline_answer(context: dict) -> str:
+    """Useful deterministic answer when no live model is configured."""
+    snap = context.get("snapshot") or {}
+    incs = context.get("incidents") or []
+    open_incs = [i for i in incs if i.get("status") != "resolved"]
+    top = (
+        ", ".join(f"{i['namespace']}/{i['name']} ({i['reason']})" for i in open_incs[:3])
+        or "none"
+    )
+    return (
+        f"Cluster health is {snap.get('health_score', 100)}%. There are {len(open_incs)} open "
+        f"incident(s) of {len(incs)} total. Most pressing: {top}. Detected cost waste "
+        f"${snap.get('monthly_waste_usd', 0):.0f}/mo and {snap.get('security_findings', 0)} "
+        "security finding(s). Set OPENAI_API_KEY for a full natural-language answer."
+    )
 
 
 @router.post("/diagnose", response_model=DiagnoseResponse, summary="Diagnose a cluster incident")
@@ -285,6 +317,62 @@ async def overview(
         recent_incidents=[IncidentOut.model_validate(i) for i in incidents],
         recent_remediations=[RemediationOut.model_validate(r) for r in rems],
     )
+
+
+@router.post("/ask", response_model=AskResponse, summary="Ask your cluster (NL Q&A over live state)")
+async def ask_cluster_endpoint(
+    payload: AskRequest,
+    ctx: TenantContext = Depends(tenant_context),
+    session: AsyncSession = Depends(get_session),
+) -> AskResponse:
+    provider = get_ai_provider()
+    snap = await repo.latest_snapshot(session, ctx.tenant_id)
+    incidents = await repo.list_incidents(session, ctx.tenant_id, limit=20)
+    context = {
+        "snapshot": SnapshotOut.model_validate(snap).model_dump(mode="json") if snap else None,
+        "incidents": [
+            {
+                "namespace": i.namespace,
+                "name": i.name,
+                "reason": i.reason,
+                "status": i.status,
+                "severity": i.severity,
+                "summary": i.summary,
+            }
+            for i in incidents
+        ],
+    }
+    sources = [i.id for i in incidents[:5]]
+
+    if getattr(provider, "name", "") == "offline":
+        return AskResponse(
+            answer=_offline_answer(context),
+            sources=sources,
+            model_used="deterministic",
+            provider="deterministic",
+        )
+    try:
+        result = await provider.generate(
+            ask_cluster(payload.question, context),
+            system=CLUSTER_ADVISOR_SYSTEM,
+            temperature=0.3,
+            max_tokens=600,
+        )
+        answer = (result.text or "").strip() or _offline_answer(context)
+        return AskResponse(
+            answer=answer,
+            sources=sources,
+            model_used=result.model_id,
+            provider=result.provider,
+        )
+    except AIProviderError as exc:
+        logger.warning("k8s.ask_failed", error=str(exc))
+        return AskResponse(
+            answer=_offline_answer(context),
+            sources=sources,
+            model_used="deterministic",
+            provider="deterministic",
+        )
 
 
 @router.websocket("/stream")

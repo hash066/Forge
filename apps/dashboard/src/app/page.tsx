@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { AlertCircle, MessageSquareText } from 'lucide-react';
-import type { AuditEntry, ClusterSnapshot, Incident } from '@devforge/core';
+import { AlertCircle, MessageSquareText, SendHorizonal } from 'lucide-react';
+import type { AskResponse, AuditEntry, ClusterSnapshot, Incident } from '@devforge/core';
 import { useClusterFeed } from '@/hooks/useClusterFeed';
+import { ReasoningStream } from '@/components/incidents/reasoning-stream';
 import { ActivityRail } from '@/components/activity-rail';
 import { HealthRing } from '@/components/health-ring';
 import { IncidentFeed } from '@/components/incident-feed';
@@ -133,7 +134,7 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {view === 'ask' && <AskView />}
+          {view === 'ask' && <AskView ask={feed.ask} />}
           {view === 'cost' && <CostView snapshot={snapshot} incidents={feed.incidents} />}
           {view === 'security' && <SecurityView snapshot={snapshot} incidents={feed.incidents} />}
           {view === 'audit' && <AuditView audit={feed.audit} />}
@@ -150,26 +151,106 @@ export default function DashboardPage() {
 
 /* ── lightweight views (real data, no new deps) ─────────────────────────────── */
 
-function AskView() {
+const ASK_SUGGESTIONS = [
+  'Why are payments crashing?',
+  'What did you fix recently?',
+  'Where is the cost waste?',
+  'Any security risks right now?',
+];
+
+function AskView({ ask }: { ask: (q: string) => Promise<AskResponse> }) {
+  const [q, setQ] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [resp, setResp] = useState<AskResponse | null>(null);
+  const [asked, setAsked] = useState('');
+
+  const submit = async (question?: string) => {
+    const text = (question ?? q).trim();
+    if (!text || loading) return;
+    setAsked(text);
+    setQ(text);
+    setLoading(true);
+    setResp(null);
+    try {
+      setResp(await ask(text));
+    } catch {
+      setResp({
+        answer: 'Could not reach the control plane. Start it and try again.',
+        sources: [],
+        model_used: '',
+        provider: '',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="panel flex min-h-[360px] flex-col items-center justify-center gap-4 p-10 text-center">
-      <div className="grid h-14 w-14 place-items-center rounded-2xl bg-brand-500/10 text-brand-400">
-        <MessageSquareText className="h-7 w-7" />
+    <div className="flex flex-col gap-4">
+      <div className="panel p-5">
+        <div className="flex items-center gap-2 rounded-xl border border-subtle bg-background/60 px-4 py-3">
+          <span className="font-mono text-brand-400">›</span>
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && submit()}
+            placeholder="Ask anything about your cluster…"
+            className="flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-foreground-tertiary"
+          />
+          <button
+            onClick={() => submit()}
+            disabled={loading || !q.trim()}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-brand-gradient px-3 py-1.5 text-xs font-semibold text-background transition hover:opacity-95 disabled:opacity-40"
+          >
+            <SendHorizonal className="h-3.5 w-3.5" />
+            {loading ? 'Thinking…' : 'Ask'}
+          </button>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {ASK_SUGGESTIONS.map((s) => (
+            <button
+              key={s}
+              onClick={() => submit(s)}
+              className="rounded-full border border-subtle bg-elevated/60 px-3 py-1 text-xs text-foreground-secondary transition hover:border-brand-500/40 hover:text-foreground"
+            >
+              {s}
+            </button>
+          ))}
+        </div>
       </div>
-      <div>
-        <p className="font-display text-xl font-semibold">Ask your cluster</p>
-        <p className="mx-auto mt-2 max-w-md text-sm text-foreground-tertiary">
-          “Why are payments crashing?” · “What did you fix in the last 10 minutes?” · “Where is the
-          cost waste?” — GPT answers over live cluster state, citing the incidents it used.
-        </p>
-      </div>
-      <div className="flex w-full max-w-lg items-center gap-2 rounded-xl border border-subtle bg-background/60 px-4 py-3 text-left text-sm text-foreground-tertiary">
-        <span className="font-mono text-brand-400">›</span>
-        Ask a question…
-        <span className="ml-auto rounded-md border border-subtle px-2 py-0.5 font-mono text-[10px] text-foreground-disabled">
-          ⏎
-        </span>
-      </div>
+
+      {(loading || resp) && (
+        <div className="panel p-5">
+          <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.14em] text-foreground-tertiary">
+            {asked}
+          </p>
+          {loading ? (
+            <p className="text-sm text-foreground-tertiary">
+              <span className="mr-2 inline-block h-3.5 w-1.5 animate-pulse bg-brand-400 align-middle" />
+              consulting cluster state…
+            </p>
+          ) : resp ? (
+            <ReasoningStream text={resp.answer} active model={resp.model_used || null} />
+          ) : null}
+          {resp && resp.sources.length > 0 && (
+            <p className="mt-3 font-mono text-[11px] text-foreground-tertiary">
+              sources: {resp.sources.length} incident(s)
+            </p>
+          )}
+        </div>
+      )}
+
+      {!loading && !resp && (
+        <div className="panel flex flex-col items-center justify-center gap-3 p-10 text-center">
+          <div className="grid h-14 w-14 place-items-center rounded-2xl bg-brand-500/10 text-brand-400">
+            <MessageSquareText className="h-7 w-7" />
+          </div>
+          <p className="max-w-md text-sm text-foreground-tertiary">
+            GPT answers over live cluster state, citing the incidents it used. Try a suggestion
+            above.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
