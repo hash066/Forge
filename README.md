@@ -72,13 +72,26 @@ diagnosed by the SRE engine, and heal as cluster health climbs back to 100% — 
 1. **Detect** — pure-function detectors classify faults from the K8s API: `CrashLoopBackOff`, `OOMKilled`, `ImagePullBackOff`, `ProbeFailure`, `StuckRollout`, `Unschedulable`, `MissingLimits`, `OverProvisioned`, `PrivilegedPod`.
 2. **Diagnose** — the operator gathers context (events, logs, container status, spec) and the control plane asks **OpenAI** for a structured root cause + remediation with a confidence score. A deterministic engine is the always-on fallback.
 3. **Remediate** — per the `RemediationPolicy` CRD, low-risk fixes auto-apply; risky ones wait for one-click approval. Every action is audited.
-4. **Observe** — a live dashboard streams incidents, diagnoses, fixes, cost, and security posture in real time.
+4. **Observe & ask** — a live dashboard streams a cluster **topology**, an incident feed showing the AI's **investigation** (tool-call trace) and **reasoning** (streamed token-by-token), plus cost, security, and an immutable audit log. Ask it anything in natural language — *"Why are payments crashing?"* — and GPT answers over live state, citing the incidents it used.
+
+## What makes it different
+
+Most "AI for Kubernetes" tools stop at *diagnosis* — they tell you what's wrong. DevForge OS closes the loop:
+
+| | Diagnosis-only tools | **DevForge OS** |
+| --- | --- | --- |
+| Root-cause analysis | ✅ | ✅ OpenAI GPT-5.5, structured + confidence-scored |
+| **Applies the fix** | ❌ | ✅ rollback · resource bump · image pin · probe tweak |
+| Safety | — | Policy-gated (`RemediationPolicy` CRD) · least-priv RBAC · full audit |
+| Visible investigation | ❌ | Live tool-call trace + streamed reasoning per incident |
+| Natural-language ops | ❌ | "Ask your cluster" — GPT over live state |
+| No cluster / no key | ❌ | Deterministic fallback — the demo never fails |
 
 ## Repository layout
 
 ```
 apps/
-  dashboard/       Next.js 15 — live self-healing command center (the showpiece)
+  dashboard/       Next.js 15 — command center: topology · incidents · AI investigation · Ask
   marketing/       Next.js 15 — product site
   extension/       VS Code extension — cluster incidents in your IDE
 operators/
@@ -88,7 +101,7 @@ services/
   cli/             Rust CLI — `devforge cluster status|watch|incidents`
 packages/
   core/            Shared TS types + typed REST/WebSocket client
-  ui/ · tokens/    Branded design system (coral/dark/glass)
+  ui/ · tokens/    "Obsidian & Champagne" design system · Fraunces + Hanken Grotesk
 deploy/
   helm/devforge-os Helm chart (operator + control plane + CRD + RBAC)
   manifests/ eks/  Raw manifests + EKS guide
