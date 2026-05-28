@@ -192,6 +192,8 @@ class OverviewResponse(BaseModel):
     snapshot: SnapshotOut | None = None
     recent_incidents: list[IncidentOut] = Field(default_factory=list)
     recent_remediations: list[RemediationOut] = Field(default_factory=list)
+    # "live" when a real in-cluster operator is reporting; "simulated" otherwise.
+    mode: str = "simulated"
 
 
 class OkResponse(BaseModel):

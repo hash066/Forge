@@ -324,11 +324,15 @@ async def overview(
     snap = await repo.latest_snapshot(session, ctx.tenant_id)
     incidents = await repo.list_incidents(session, ctx.tenant_id, limit=25)
     rems = await repo.list_remediations(session, ctx.tenant_id, limit=25)
+    # A real in-cluster operator tags its snapshots source="operator"; the
+    # simulator tags source="simulator". Report the truth to the dashboard.
+    mode = "live" if (snap and (snap.detail or {}).get("source") == "operator") else "simulated"
     return OverviewResponse(
         stats=stats,
         snapshot=SnapshotOut.model_validate(snap) if snap else None,
         recent_incidents=[IncidentOut.model_validate(i) for i in incidents],
         recent_remediations=[RemediationOut.model_validate(r) for r in rems],
+        mode=mode,
     )
 
 

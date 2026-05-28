@@ -77,9 +77,12 @@ export default function DashboardPage() {
         <main className="mx-auto w-full max-w-[1500px] flex-1 px-6 py-7">
           {/* view header */}
           <div className="mb-7">
-            <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-400/80">
-              {meta.kicker}
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-400/80">
+                {meta.kicker}
+              </span>
+              <ModePill mode={feed.mode} />
+            </div>
             <h1 className="mt-2 font-display text-[2.5rem] font-semibold leading-[1.05] tracking-tight">
               {meta.title}
             </h1>
@@ -154,6 +157,22 @@ export default function DashboardPage() {
 }
 
 /* ── lightweight views (real data, no new deps) ─────────────────────────────── */
+
+function ModePill({ mode }: { mode: string }) {
+  const live = mode === 'live';
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wide ${
+        live
+          ? 'border-verified/30 bg-verified/10 text-verified'
+          : 'border-subtle bg-elevated/60 text-foreground-tertiary'
+      }`}
+    >
+      <span className={`h-1.5 w-1.5 rounded-full ${live ? 'bg-verified' : 'bg-foreground-tertiary'}`} />
+      {live ? 'live cluster' : 'simulated'}
+    </span>
+  );
+}
 
 const ASK_SUGGESTIONS = [
   'Why are payments crashing?',

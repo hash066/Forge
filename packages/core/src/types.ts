@@ -133,6 +133,8 @@ export interface Overview {
   snapshot: ClusterSnapshot | null;
   recent_incidents: Incident[];
   recent_remediations: Remediation[];
+  /** "live" when a real in-cluster operator is reporting; "simulated" otherwise. */
+  mode?: string;
 }
 
 export interface IncidentContext {

@@ -37,6 +37,7 @@ export interface FeedState {
   demoRunning: boolean;
   reasoning: Record<string, string>;
   tools: Record<string, ToolStep[]>;
+  mode: string;
 }
 
 function computeStats(incidents: Incident[]): IncidentStats {
@@ -79,6 +80,7 @@ export function useClusterFeed() {
     demoRunning: false,
     reasoning: {},
     tools: {},
+    mode: 'simulated',
   });
 
   const flushIncidents = useCallback(() => {
@@ -172,6 +174,7 @@ export function useClusterFeed() {
           ...s,
           snapshot: ov.snapshot,
           remediations: ov.recent_remediations,
+          mode: ov.mode ?? s.mode,
           providerModel:
             ov.recent_incidents.find((i) => i.model_used)?.model_used ?? s.providerModel,
         }));
