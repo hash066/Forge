@@ -13,7 +13,7 @@
   }
 
   .text-ai-gradient {
-    background-image: linear-gradient(135deg, hsl(var(--ai-500)) 0%, hsl(280 90% 70%) 100%);
+    background-image: linear-gradient(135deg, hsl(var(--ai-300)) 0%, hsl(var(--brand-700)) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -30,11 +30,18 @@
   }
 
   .panel {
-    background-color: hsl(var(--bg-elevated) / 0.5);
+    background-image: linear-gradient(
+      180deg,
+      hsl(var(--bg-elevated) / 0.66) 0%,
+      hsl(var(--bg-elevated) / 0.4) 100%
+    );
     border: 1px solid hsl(var(--border-subtle));
     border-radius: 1rem;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(14px) saturate(130%);
+    -webkit-backdrop-filter: blur(14px) saturate(130%);
+    box-shadow:
+      0 1px 0 0 hsl(var(--fg-primary) / 0.04) inset,
+      0 18px 40px -28px hsl(0 0% 0% / 0.8);
   }
 
   /* Subtle dotted grid backdrop for the whole app */

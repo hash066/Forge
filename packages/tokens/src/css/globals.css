@@ -1,67 +1,64 @@
 /**
- * DevForge global CSS — theme variables.
+ * DevForge OS global CSS — theme variables ("Obsidian & Champagne").
  *
- * Variables defined here power the entire color system. Tailwind preset reads
- * these via `hsl(var(--token) / <alpha-value>)` syntax. Theme switching is
- * therefore a class toggle on <html>, no rebuild required.
- *
- * Imported by apps via their own globals.css which contains the @tailwind
- * directives. This file deliberately avoids @layer wrappers so it works in
- * any consumer regardless of Tailwind setup order.
+ * These power the entire color system; the Tailwind preset reads them via
+ * `hsl(var(--token) / <alpha-value>)`. Theme switching is a class toggle on
+ * <html>, no rebuild required. Kept free of @layer wrappers so it works in any
+ * consumer regardless of Tailwind setup order. Values mirror colors.ts.
  */
 
 :root {
   /* Default = dark theme. Mirrored in [data-theme="dark"] for explicit selection. */
-  --bg-base: 230 10% 4%;
-  --bg-elevated: 232 10% 7%;
-  --bg-overlay: 232 12% 10%;
-  --surface-glass: 232 15% 12%;
-  --surface-grid: 0 0% 100%;
+  --bg-base: 40 9% 4%;
+  --bg-elevated: 40 8% 7%;
+  --bg-overlay: 40 9% 10%;
+  --surface-glass: 40 10% 13%;
+  --surface-grid: 40 38% 88%;
 
-  --fg-primary: 210 20% 98%;
-  --fg-secondary: 215 12% 75%;
-  --fg-tertiary: 215 10% 55%;
-  --fg-disabled: 215 8% 38%;
+  --fg-primary: 40 33% 90%;
+  --fg-secondary: 40 12% 72%;
+  --fg-tertiary: 40 8% 54%;
+  --fg-disabled: 40 6% 40%;
 
-  --border-subtle: 230 10% 16%;
-  --border-default: 230 10% 22%;
-  --border-strong: 230 12% 32%;
+  --border-subtle: 40 8% 15%;
+  --border-default: 40 8% 22%;
+  --border-strong: 40 9% 32%;
 
-  --brand-50: 15 100% 96%;
-  --brand-100: 15 100% 90%;
-  --brand-200: 14 100% 80%;
-  --brand-300: 13 100% 72%;
-  --brand-400: 12 100% 65%;
-  --brand-500: 10 100% 60%;
-  --brand-600: 6 100% 56%;
-  --brand-700: 3 95% 50%;
-  --brand-800: 0 90% 42%;
-  --brand-900: 0 80% 32%;
+  --brand-50: 40 50% 95%;
+  --brand-100: 40 48% 88%;
+  --brand-200: 39 46% 80%;
+  --brand-300: 38 46% 72%;
+  --brand-400: 38 47% 66%;
+  --brand-500: 38 47% 60%;
+  --brand-600: 36 42% 52%;
+  --brand-700: 34 40% 44%;
+  --brand-800: 32 38% 36%;
+  --brand-900: 30 35% 26%;
 
-  --magenta-500: 335 100% 65%;
-  --magenta-600: 335 95% 58%;
+  --magenta-500: 33 45% 50%;
+  --magenta-600: 31 42% 44%;
 
-  --verified-300: 152 80% 70%;
-  --verified-500: 152 80% 56%;
-  --verified-600: 152 75% 46%;
-  --verified-900: 152 60% 18%;
+  --verified-300: 150 25% 62%;
+  --verified-500: 150 26% 46%;
+  --verified-600: 150 28% 38%;
+  --verified-900: 150 25% 15%;
 
-  --ai-300: 256 95% 80%;
-  --ai-500: 256 88% 72%;
-  --ai-600: 256 80% 64%;
-  --ai-900: 256 50% 22%;
+  --ai-300: 40 46% 72%;
+  --ai-500: 38 47% 62%;
+  --ai-600: 36 42% 52%;
+  --ai-900: 34 35% 22%;
 
-  --warning-300: 38 95% 75%;
-  --warning-500: 38 92% 58%;
-  --warning-900: 32 75% 22%;
+  --warning-300: 34 70% 68%;
+  --warning-500: 32 65% 55%;
+  --warning-900: 30 50% 22%;
 
-  --critical-300: 0 90% 78%;
-  --critical-500: 0 84% 60%;
-  --critical-700: 0 80% 48%;
-  --critical-900: 0 65% 22%;
+  --critical-300: 8 55% 64%;
+  --critical-500: 6 56% 50%;
+  --critical-700: 4 55% 42%;
+  --critical-900: 6 45% 20%;
 
-  --info-500: 199 89% 60%;
-  --info-900: 210 70% 22%;
+  --info-500: 40 10% 60%;
+  --info-900: 40 10% 22%;
 
   /* Radius — exposed for shadcn primitives that read --radius */
   --radius: 0.75rem;
@@ -72,52 +69,53 @@
   color-scheme: dark;
 }
 
-/* Light theme overrides */
+/* Light theme overrides — warm paper */
 [data-theme='light'],
 .light {
   color-scheme: light;
 
-  --bg-base: 0 0% 100%;
-  --bg-elevated: 210 20% 98%;
-  --bg-overlay: 210 20% 95%;
-  --surface-glass: 0 0% 100%;
-  --surface-grid: 232 10% 0%;
+  --bg-base: 40 30% 97%;
+  --bg-elevated: 40 24% 94%;
+  --bg-overlay: 40 22% 91%;
+  --surface-glass: 40 30% 99%;
+  --surface-grid: 40 12% 10%;
 
-  --fg-primary: 232 18% 8%;
-  --fg-secondary: 230 12% 28%;
-  --fg-tertiary: 228 10% 45%;
-  --fg-disabled: 228 8% 65%;
+  --fg-primary: 40 14% 11%;
+  --fg-secondary: 38 10% 30%;
+  --fg-tertiary: 38 8% 46%;
+  --fg-disabled: 38 8% 66%;
 
-  --border-subtle: 220 14% 92%;
-  --border-default: 220 14% 86%;
-  --border-strong: 220 12% 70%;
+  --border-subtle: 40 14% 88%;
+  --border-default: 40 14% 82%;
+  --border-strong: 40 12% 66%;
 
-  --brand-500: 10 100% 56%;
-  --brand-600: 6 100% 50%;
+  --brand-400: 37 44% 58%;
+  --brand-500: 34 44% 46%;
+  --brand-600: 32 44% 40%;
 
-  --magenta-500: 335 95% 58%;
-  --magenta-600: 335 90% 50%;
+  --magenta-500: 30 42% 40%;
+  --magenta-600: 28 42% 34%;
 
-  --verified-500: 152 75% 36%;
-  --ai-500: 256 75% 50%;
-  --warning-500: 32 95% 44%;
-  --critical-500: 0 84% 48%;
-  --info-500: 199 89% 44%;
+  --verified-500: 150 34% 32%;
+  --ai-500: 34 44% 44%;
+  --warning-500: 30 72% 42%;
+  --critical-500: 6 62% 44%;
+  --info-500: 40 8% 44%;
 }
 
 html,
 body {
   background-color: hsl(var(--bg-base));
   color: hsl(var(--fg-primary));
-  font-feature-settings: 'cv11', 'ss01', 'ss03';
+  font-feature-settings: 'ss01', 'cv11';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
 
-/* Native selection — uses brand */
+/* Native selection — champagne */
 ::selection {
-  background-color: hsl(var(--brand-500) / 0.32);
+  background-color: hsl(var(--brand-500) / 0.28);
   color: hsl(var(--fg-primary));
 }
 
@@ -128,7 +126,7 @@ body {
   border-radius: 4px;
 }
 
-/* Scrollbar — minimal, dark-mode native */
+/* Scrollbar — minimal, warm */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;

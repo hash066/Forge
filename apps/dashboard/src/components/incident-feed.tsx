@@ -49,7 +49,7 @@ export function IncidentFeed({ incidents, onApprove, onRunDemo, demoRunning }: I
           <button
             onClick={onRunDemo}
             disabled={demoRunning}
-            className="inline-flex items-center gap-2 rounded-xl bg-brand-gradient px-4 py-2 text-sm font-semibold text-white transition hover:opacity-95 disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-xl bg-brand-gradient px-4 py-2 text-sm font-semibold text-background transition hover:opacity-95 disabled:opacity-50"
           >
             <Play className="h-4 w-4" fill="currentColor" />
             {demoRunning ? 'Running…' : 'Run live demo'}

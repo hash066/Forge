@@ -30,7 +30,7 @@ export interface StatusMeta {
 export function statusMeta(status: string): StatusMeta {
   switch (status) {
     case 'detected':
-      return { label: 'Detected', palette: severityPalette('high') };
+      return { label: 'Detected', palette: severityPalette('medium') };
     case 'diagnosing':
       return { label: 'Diagnosing', palette: { text: 'text-ai', bg: 'bg-ai/10', border: 'border-ai/30', dot: 'bg-ai' } };
     case 'suggested':

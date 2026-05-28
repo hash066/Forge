@@ -15,11 +15,11 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        /* Primary CTA — brand gradient. The "Install Extension" button in the hero. */
+        /* Primary CTA — champagne gradient with dark ink text (the luxe pairing). */
         primary: [
-          'relative overflow-hidden text-white',
-          'bg-[linear-gradient(90deg,hsl(var(--brand-500))_0%,hsl(var(--magenta-500))_100%)]',
-          'shadow-glow-brand hover:shadow-[0_0_0_1px_hsl(var(--brand-500)/0.5),0_0_48px_-8px_hsl(var(--brand-500)/0.7)]',
+          'relative overflow-hidden text-background font-semibold',
+          'bg-[linear-gradient(100deg,hsl(40_52%_72%)_0%,hsl(var(--brand-500))_50%,hsl(var(--magenta-500))_100%)]',
+          'shadow-[0_0_0_1px_hsl(var(--brand-500)/0.35),0_8px_32px_-10px_hsl(var(--brand-500)/0.45)] hover:shadow-[0_0_0_1px_hsl(var(--brand-400)/0.6),0_0_44px_-8px_hsl(var(--brand-500)/0.6)]',
           'hover:-translate-y-px active:translate-y-0',
         ],
         /* Secondary CTA — outlined on dark glass. "Book Demo" in the hero. */

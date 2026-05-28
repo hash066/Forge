@@ -59,14 +59,18 @@ export function StatCards({ stats, snapshot }: StatCardsProps) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05 }}
-            className="panel p-4"
+            className="panel p-5"
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-foreground-tertiary">{c.label}</span>
+              <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-foreground-tertiary">
+                {c.label}
+              </span>
               <Icon className={`h-4 w-4 ${c.accent}`} />
             </div>
-            <div className="mt-2 font-display text-3xl font-bold tabular-nums">{c.value}</div>
-            <div className="mt-0.5 text-xs text-foreground-tertiary">{c.sub}</div>
+            <div className="mt-3 font-display text-[2.1rem] font-semibold leading-none tabular-nums tracking-tight">
+              {c.value}
+            </div>
+            <div className="mt-1.5 text-xs text-foreground-tertiary">{c.sub}</div>
           </motion.div>
         );
       })}

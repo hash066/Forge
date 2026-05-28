@@ -31,7 +31,8 @@ operators/
   k8s/             Python kopf operator — detectors, remediator, simulator, CRD, RBAC
 packages/
   core/            Shared TS types + typed REST/WebSocket client (was empty; now filled)
-  ui/ tokens/      Branded design system (coral/dark/glass)
+  ui/ tokens/      "Obsidian & Champagne" design system — warm obsidian + ivory + champagne
+                   gold; Fraunces (serif display) · Hanken Grotesk (UI) · JetBrains Mono
 deploy/
   helm/devforge-os Helm chart · manifests/ raw k8s · eks/ EKS guide
 infra/cdk/         AWS CDK — control plane on App Runner (OpenAI env wired)

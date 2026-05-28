@@ -34,7 +34,7 @@ export function TopBar({ connection, online, providerModel, demoRunning, onRunDe
         {/* Brand */}
         <div className="flex items-center gap-3">
           <div className="grid h-9 w-9 place-items-center rounded-xl bg-brand-gradient shadow-[0_0_24px_-6px_hsl(var(--brand-500)/0.7)]">
-            <Activity className="h-5 w-5 text-white" strokeWidth={2.5} />
+            <Activity className="h-5 w-5 text-background" strokeWidth={2.5} />
           </div>
           <div className="leading-tight">
             <div className="font-display text-[15px] font-semibold tracking-tight">
@@ -73,7 +73,7 @@ export function TopBar({ connection, online, providerModel, demoRunning, onRunDe
           <button
             onClick={onRunDemo}
             disabled={demoRunning}
-            className="inline-flex items-center gap-2 rounded-xl bg-brand-gradient px-4 py-2 text-sm font-semibold text-white shadow-[0_0_24px_-8px_hsl(var(--brand-500)/0.8)] transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-xl bg-brand-gradient px-4 py-2 text-sm font-semibold text-background shadow-[0_0_24px_-8px_hsl(var(--brand-500)/0.8)] transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Play className="h-4 w-4" fill="currentColor" />
             {demoRunning ? 'Healing…' : 'Run live demo'}

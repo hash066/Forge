@@ -14,7 +14,7 @@
   }
 
   .text-ai-gradient {
-    background-image: linear-gradient(135deg, hsl(var(--ai-500)) 0%, hsl(280 90% 70%) 100%);
+    background-image: linear-gradient(135deg, hsl(var(--ai-300)) 0%, hsl(var(--brand-700)) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;

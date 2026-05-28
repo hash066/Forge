@@ -67,6 +67,75 @@ def _snapshot(cfg: OperatorConfig, healthy: int, total: int, waste: float, findi
     }
 
 
+async def _run_cycle(
+    client: ControlPlaneClient,
+    cfg: OperatorConfig,
+    pods: list[dict[str, Any]],
+    detect_delay: float,
+    heal_delay: float,
+) -> None:
+    """One full detect → diagnose → heal narrative pass."""
+    contexts: list[dict[str, Any]] = []
+    for pod in pods:
+        contexts.extend(scan_pod(pod))
+
+    total = BASELINE["pods_total"]
+    broken = len(contexts)
+    findings = sum(1 for c in contexts if c["reason"] == "PrivilegedPod")
+    waste = sum(40.0 for c in contexts if c["reason"] in ("OverProvisioned", "MissingLimits"))
+
+    # 1) cluster starts degraded
+    await client.snapshot(_snapshot(cfg, total - broken, total, waste, findings))
+    logger.info("simulator.cluster_degraded", broken=broken, health=round(100 * (total - broken) / total))
+
+    # 2) detect + diagnose each incident (dashboard lights up)
+    diagnosed: list[dict[str, Any]] = []
+    for ctx in contexts:
+        resp = await client.diagnose(ctx)
+        diagnosed.append(resp)
+        rem = resp["rca"]["remediation"]
+        logger.info(
+            "simulator.diagnosed",
+            reason=ctx["reason"],
+            action=rem["action"],
+            mode=rem["mode"],
+            provider=resp.get("provider"),
+        )
+        await asyncio.sleep(detect_delay)
+
+    # 3) heal one by one (dashboard shows incidents resolving + health climbing)
+    healthy = total - broken
+    for resp in diagnosed:
+        await asyncio.sleep(heal_delay)
+        rem = resp["rca"]["remediation"]
+        # suggest-mode incidents pass through an approval gate first
+        if rem["mode"] != "auto":
+            await client.report_remediation(
+                incident_id=resp["incident_id"],
+                remediation_id=resp.get("remediation_id"),
+                action=rem["action"],
+                target=rem["target"],
+                status="approved",
+                detail="operator: approved",
+            )
+            await asyncio.sleep(heal_delay * 0.4)
+        await client.report_remediation(
+            incident_id=resp["incident_id"],
+            remediation_id=resp.get("remediation_id"),
+            action=rem["action"],
+            target=rem["target"],
+            status="applied",
+            detail="devforge-operator: remediated and verified healthy",
+        )
+        healthy += 1
+        findings = max(0, findings - (1 if rem["action"] == "patch_image" else 0))
+        waste = max(0.0, waste - 40.0) if rem["action"] in ("set_resources",) else waste
+        await client.snapshot(_snapshot(cfg, healthy, total, waste, findings))
+        logger.info("simulator.healed", target=rem["target"], health=round(100 * healthy / total))
+
+    logger.info("simulator.cluster_healthy", health=100)
+
+
 async def run(
     cfg: OperatorConfig | None = None,
     *,
@@ -94,65 +163,14 @@ async def run(
 
     try:
         while True:
-            contexts: list[dict[str, Any]] = []
-            for pod in pods:
-                contexts.extend(scan_pod(pod))
-
-            total = BASELINE["pods_total"]
-            broken = len(contexts)
-            findings = sum(1 for c in contexts if c["reason"] == "PrivilegedPod")
-            waste = sum(40.0 for c in contexts if c["reason"] in ("OverProvisioned", "MissingLimits"))
-
-            # 1) cluster starts degraded
-            await client.snapshot(_snapshot(cfg, total - broken, total, waste, findings))
-            logger.info("simulator.cluster_degraded", broken=broken, health=round(100*(total-broken)/total))
-
-            # 2) detect + diagnose each incident (dashboard lights up)
-            diagnosed: list[dict[str, Any]] = []
-            for ctx in contexts:
-                resp = await client.diagnose(ctx)
-                diagnosed.append(resp)
-                rem = resp["rca"]["remediation"]
-                logger.info(
-                    "simulator.diagnosed",
-                    reason=ctx["reason"],
-                    action=rem["action"],
-                    mode=rem["mode"],
-                    provider=resp.get("provider"),
-                )
-                await asyncio.sleep(detect_delay)
-
-            # 3) heal one by one (dashboard shows incidents resolving + health climbing)
-            healthy = total - broken
-            for resp in diagnosed:
-                await asyncio.sleep(heal_delay)
-                rem = resp["rca"]["remediation"]
-                # suggest-mode incidents pass through an approval gate first
-                if rem["mode"] != "auto":
-                    await client.report_remediation(
-                        incident_id=resp["incident_id"],
-                        remediation_id=resp.get("remediation_id"),
-                        action=rem["action"],
-                        target=rem["target"],
-                        status="approved",
-                        detail="operator: approved",
-                    )
-                    await asyncio.sleep(heal_delay * 0.4)
-                await client.report_remediation(
-                    incident_id=resp["incident_id"],
-                    remediation_id=resp.get("remediation_id"),
-                    action=rem["action"],
-                    target=rem["target"],
-                    status="applied",
-                    detail="devforge-operator: remediated and verified healthy",
-                )
-                healthy += 1
-                findings = max(0, findings - (1 if rem["action"] == "patch_image" else 0))
-                waste = max(0.0, waste - 40.0) if rem["action"] in ("set_resources",) else waste
-                await client.snapshot(_snapshot(cfg, healthy, total, waste, findings))
-                logger.info("simulator.healed", target=rem["target"], health=round(100*healthy/total))
-
-            logger.info("simulator.cluster_healthy", health=100)
+            try:
+                await _run_cycle(client, cfg, pods, detect_delay, heal_delay)
+            except Exception as exc:  # noqa: BLE001 - keep the live demo alive across transient HTTP blips
+                logger.warning("simulator.cycle_error", error=str(exc))
+                if not loop:
+                    raise
+                await asyncio.sleep(3.0)
+                continue
             if not loop:
                 break
             await asyncio.sleep(8.0)

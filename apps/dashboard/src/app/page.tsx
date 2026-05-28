@@ -29,11 +29,14 @@ export default function DashboardPage() {
 
       <main className="mx-auto max-w-[1400px] px-6 py-6">
         {/* Heading */}
-        <div className="mb-6">
-          <h1 className="font-display text-3xl font-bold tracking-tight">
-            Self-healing <span className="text-brand-gradient">Kubernetes</span>
+        <div className="mb-8">
+          <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-brand-400/80">
+            Autonomous Kubernetes SRE
+          </span>
+          <h1 className="mt-2.5 font-display text-[2.75rem] font-semibold leading-[1.04] tracking-tight">
+            Self-healing <span className="text-brand-gradient">Kubernetes</span>.
           </h1>
-          <p className="mt-1 text-sm text-foreground-tertiary">
+          <p className="mt-3 max-w-2xl text-[0.95rem] leading-relaxed text-foreground-secondary">
             DevForge OS watches the cluster, diagnoses incidents with GPT, and remediates them
             autonomously — with policy gates and a full audit trail.
           </p>

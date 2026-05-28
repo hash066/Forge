@@ -1,22 +1,31 @@
 /**
- * Font face declarations.
+ * Font face declarations (fallback for non-Next consumers, e.g. extension webviews).
  *
- * Apps using next/font don't need this file — they set --font-display etc.
- * via next/font's CSS variable injection. This file is a fallback for non-Next
- * consumers (e.g. extension webviews where next/font isn't available).
+ * Apps using next/font don't need this — they inject --font-display / --font-sans /
+ * --font-mono via next/font's CSS variable system (see each app's layout.tsx).
  */
 
-/* Inter Variable — body + UI */
+/* Fraunces — editorial serif for display / hero / big numbers */
 @font-face {
-  font-family: 'Inter Variable';
+  font-family: 'Fraunces';
   font-style: normal;
   font-weight: 100 900;
   font-display: swap;
-  src: url('https://cdn.jsdelivr.net/fontsource/fonts/inter:vf@latest/latin-wght-normal.woff2')
+  src: url('https://cdn.jsdelivr.net/fontsource/fonts/fraunces:vf@latest/latin-wght-normal.woff2')
     format('woff2-variations');
 }
 
-/* JetBrains Mono — code (fallback when Geist Mono unavailable) */
+/* Hanken Grotesk — body + UI */
+@font-face {
+  font-family: 'Hanken Grotesk';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('https://cdn.jsdelivr.net/fontsource/fonts/hanken-grotesk:vf@latest/latin-wght-normal.woff2')
+    format('woff2-variations');
+}
+
+/* JetBrains Mono — code / k8s identifiers */
 @font-face {
   font-family: 'JetBrains Mono';
   font-style: normal;
@@ -26,9 +35,9 @@
     format('woff2-variations');
 }
 
-/* Set the CSS variables that the Tailwind preset expects */
+/* CSS variables the Tailwind preset expects */
 :root {
-  --font-display: 'Inter Variable', system-ui, sans-serif;
-  --font-sans: 'Inter Variable', system-ui, sans-serif;
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-sans: 'Hanken Grotesk', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 }

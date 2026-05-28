@@ -103,7 +103,7 @@ export function IncidentCard({ incident, onApprove }: IncidentCardProps) {
             <p className="text-xs leading-relaxed text-foreground-secondary">{plan.rationale}</p>
           )}
           {command && (
-            <div className="flex items-start gap-2 rounded-md bg-black/40 px-2.5 py-1.5">
+            <div className="flex items-start gap-2 rounded-md border border-subtle/60 bg-background/70 px-2.5 py-1.5">
               <Terminal className="mt-0.5 h-3.5 w-3.5 shrink-0 text-foreground-tertiary" />
               <code className="font-mono text-[11px] leading-relaxed text-verified-300">
                 {command}

@@ -1,19 +1,19 @@
 /**
- * DevForge typography tokens.
+ * DevForge OS typography tokens — "Obsidian & Champagne".
  *
- * Three families, all variable fonts:
- *   - Display (Geist Sans): massive hero copy, tight leading, slightly negative letter spacing
- *   - Sans (Inter Variable): body, UI, navigation
- *   - Mono (Geist Mono / JetBrains Mono fallback): code, terminal-style chips
+ * A niche, editorial pairing:
+ *   - Display (Fraunces): high-contrast serif for hero copy + big stat numbers
+ *   - Sans (Hanken Grotesk): warm, legible grotesque for body, UI, navigation
+ *   - Mono (JetBrains Mono): pod names, k8s identifiers, code chips
  *
  * Sizes follow a fluid scale that scales between small viewports and 2xl screens.
  * Use the named tokens (e.g. `text-display-2xl`) rather than raw values.
  */
 export const typography = {
   fontFamilies: {
-    display: ['var(--font-display)', 'Geist Sans', 'Inter', 'system-ui', 'sans-serif'].join(', '),
-    sans: ['var(--font-sans)', 'Inter Variable', 'Inter', 'system-ui', 'sans-serif'].join(', '),
-    mono: ['var(--font-mono)', 'Geist Mono', 'JetBrains Mono', 'ui-monospace', 'monospace'].join(', '),
+    display: ['var(--font-display)', 'Fraunces', 'Georgia', 'serif'].join(', '),
+    sans: ['var(--font-sans)', 'Hanken Grotesk', 'Inter', 'system-ui', 'sans-serif'].join(', '),
+    mono: ['var(--font-mono)', 'JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'].join(', '),
   },
 
   /**

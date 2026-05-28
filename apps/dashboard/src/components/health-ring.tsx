@@ -52,12 +52,14 @@ export function HealthRing({ score, pods }: HealthRingProps) {
             key={Math.round(pct)}
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            className="font-display text-5xl font-bold tabular-nums"
+            className="font-display text-[3.25rem] font-semibold leading-none tabular-nums"
             style={{ color }}
           >
             {Math.round(pct)}
           </motion.span>
-          <span className="text-xs font-medium text-foreground-tertiary">cluster health</span>
+          <span className="mt-1 text-[11px] font-medium uppercase tracking-[0.14em] text-foreground-tertiary">
+            cluster health
+          </span>
         </div>
       </div>
       <div className="mt-4 text-center">
