@@ -2,12 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { BrainCircuit, Wrench } from 'lucide-react';
-
-interface ToolStep {
-  tool: string;
-  arg: string;
-  result: string;
-}
+import type { ToolStep } from '@devforge/core';
 
 interface ReasoningStreamProps {
   /** The model's root-cause text (streamed token-by-token when `active`). */

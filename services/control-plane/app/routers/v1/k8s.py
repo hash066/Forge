@@ -91,22 +91,16 @@ async def diagnose_incident(
 ) -> DiagnoseResponse:
     start = time.perf_counter()
     provider = get_ai_provider()
+    bus = get_event_bus()
 
-    rca, ai = await k8s_rca.diagnose(provider, payload)
-    model_used = ai.model_id if ai else "deterministic"
-    provider_name = ai.provider if ai else "deterministic"
-
+    # Create/refresh the incident as 'diagnosing' FIRST so the card appears
+    # immediately, then stream the investigation + reasoning into it live.
     existing = await repo.find_open_incident_by_signature(
         session, ctx.tenant_id, payload.namespace, payload.kind, payload.name, payload.reason
     )
     if existing is not None:
         incident = existing
-        incident.summary = rca.summary
-        incident.root_cause = rca.root_cause
-        incident.confidence = rca.confidence
-        incident.evidence = rca.evidence
-        incident.remediation = rca.remediation.model_dump()
-        incident.model_used = model_used
+        incident.status = "diagnosing"
     else:
         incident = await repo.create_incident(
             session,
@@ -118,14 +112,33 @@ async def diagnose_incident(
             reason=payload.reason,
             severity=payload.severity,
             status="diagnosing",
-            summary=rca.summary,
-            root_cause=rca.root_cause,
-            confidence=rca.confidence,
-            evidence=rca.evidence,
-            remediation=rca.remediation.model_dump(),
+            summary="",
+            root_cause="",
+            confidence=0.0,
+            evidence=[],
+            remediation={},
             raw_context=payload.model_dump(),
-            model_used=model_used,
+            model_used=None,
         )
+    await session.commit()
+    await bus.publish(
+        {
+            "type": "incident.detected",
+            "tenant_id": ctx.tenant_id,
+            "incident": IncidentOut.model_validate(incident).model_dump(mode="json"),
+        }
+    )
+
+    rca, model_used, provider_name = await k8s_rca.diagnose_streaming(
+        provider, payload, tenant_id=ctx.tenant_id, incident_id=incident.id, bus=bus
+    )
+
+    incident.summary = rca.summary
+    incident.root_cause = rca.root_cause
+    incident.confidence = rca.confidence
+    incident.evidence = rca.evidence
+    incident.remediation = rca.remediation.model_dump()
+    incident.model_used = model_used
 
     rem = await repo.create_remediation(
         session,

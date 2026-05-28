@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { Check, ChevronRight, Sparkles, Terminal } from 'lucide-react';
-import type { Incident } from '@devforge/core';
+import type { Incident, ToolStep } from '@devforge/core';
 import { ReasoningStream } from './incidents/reasoning-stream';
 import { actionLabel, riskPalette, severityPalette, statusMeta, timeAgo } from '@/lib/format';
 
@@ -24,6 +24,10 @@ function buildToolTrace(incident: Incident): { tool: string; arg: string; result
 interface IncidentCardProps {
   incident: Incident;
   onApprove: (incident: Incident) => void;
+  /** Live reasoning text streamed over WebSocket (falls back to incident.root_cause). */
+  streamedReasoning?: string;
+  /** Live tool-call trace streamed over WebSocket (falls back to derived trace). */
+  streamedTools?: ToolStep[];
 }
 
 interface Plan {
@@ -35,7 +39,12 @@ interface Plan {
   commands?: string[];
 }
 
-export function IncidentCard({ incident, onApprove }: IncidentCardProps) {
+export function IncidentCard({
+  incident,
+  onApprove,
+  streamedReasoning,
+  streamedTools,
+}: IncidentCardProps) {
   const sev = severityPalette(incident.severity);
   const status = statusMeta(incident.status);
   const plan = (incident.remediation ?? {}) as Plan;
@@ -83,9 +92,13 @@ export function IncidentCard({ incident, onApprove }: IncidentCardProps) {
         {/* AI investigation + reasoning (typewriter while active) */}
         <div className="mt-3">
           <ReasoningStream
-            text={incident.root_cause}
-            tools={buildToolTrace(incident)}
-            active={incident.status !== 'resolved' && incident.status !== 'failed'}
+            text={streamedReasoning || incident.root_cause}
+            tools={streamedTools && streamedTools.length ? streamedTools : buildToolTrace(incident)}
+            active={
+              streamedReasoning == null &&
+              incident.status !== 'resolved' &&
+              incident.status !== 'failed'
+            }
             model={incident.model_used}
             confidence={incident.confidence}
           />

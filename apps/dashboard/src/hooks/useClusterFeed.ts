@@ -9,6 +9,7 @@ import {
   type IncidentStats,
   type Remediation,
   type StreamEvent,
+  type ToolStep,
 } from '@devforge/core';
 import { API_URL, CLUSTER_NAME, TENANT_ID } from '@/lib/config';
 import { BASELINE, SCENARIO } from '@/lib/scenario';
@@ -34,6 +35,8 @@ export interface FeedState {
   snapshot: ClusterSnapshot | null;
   stats: IncidentStats;
   demoRunning: boolean;
+  reasoning: Record<string, string>;
+  tools: Record<string, ToolStep[]>;
 }
 
 function computeStats(incidents: Incident[]): IncidentStats {
@@ -60,6 +63,8 @@ export function useClusterFeed() {
 
   const incidentsRef = useRef<Map<string, Incident>>(new Map());
   const remediationByIncident = useRef<Map<string, string>>(new Map());
+  const reasoningRef = useRef<Record<string, string>>({});
+  const toolsRef = useRef<Record<string, ToolStep[]>>({});
   const mounted = useRef(true);
 
   const [state, setState] = useState<FeedState>({
@@ -72,6 +77,8 @@ export function useClusterFeed() {
     snapshot: null,
     stats: EMPTY_STATS,
     demoRunning: false,
+    reasoning: {},
+    tools: {},
   });
 
   const flushIncidents = useCallback(() => {
@@ -116,6 +123,25 @@ export function useClusterFeed() {
       } else if (event.type === 'incident.remediated') {
         upsertIncident(event.incident);
         void refreshSideData();
+      } else if (event.type === 'incident.detected') {
+        reasoningRef.current[event.incident.id] = '';
+        toolsRef.current[event.incident.id] = [];
+        upsertIncident(event.incident);
+        setState((s) => ({
+          ...s,
+          reasoning: { ...reasoningRef.current },
+          tools: { ...toolsRef.current },
+        }));
+      } else if (event.type === 'reasoning.chunk') {
+        reasoningRef.current[event.incident_id] = event.text;
+        setState((s) => ({ ...s, reasoning: { ...reasoningRef.current } }));
+      } else if (event.type === 'tool.call') {
+        const prev = toolsRef.current[event.incident_id] ?? [];
+        toolsRef.current[event.incident_id] = [
+          ...prev,
+          { tool: event.tool, arg: event.arg, result: event.result },
+        ].slice(-3);
+        setState((s) => ({ ...s, tools: { ...toolsRef.current } }));
       } else if (event.type === 'snapshot') {
         setState((s) => ({ ...s, snapshot: event.snapshot }));
       }

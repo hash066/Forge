@@ -109,6 +109,8 @@ export default function DashboardPage() {
                   onApprove={feed.approveIncident}
                   onRunDemo={feed.runDemo}
                   demoRunning={feed.demoRunning}
+                  reasoning={feed.reasoning}
+                  tools={feed.tools}
                 />
                 <ActivityRail remediations={feed.remediations} audit={feed.audit} />
               </div>
@@ -129,6 +131,8 @@ export default function DashboardPage() {
                 onApprove={feed.approveIncident}
                 onRunDemo={feed.runDemo}
                 demoRunning={feed.demoRunning}
+                reasoning={feed.reasoning}
+                tools={feed.tools}
               />
               <ActivityRail remediations={feed.remediations} audit={feed.audit} />
             </div>

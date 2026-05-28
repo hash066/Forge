@@ -16,7 +16,9 @@ right-size an over-provisioned workload, etc.).
 
 from __future__ import annotations
 
+import asyncio
 import re
+from typing import Any
 
 import structlog
 
@@ -506,3 +508,84 @@ async def diagnose(provider: AIProvider, ctx: IncidentContext) -> tuple[RCA, AIR
             logger.warning("k8s_rca.llm_error_using_deterministic", error=str(exc))
 
     return deterministic_rca(ctx), None
+
+
+# ── live streaming: investigation (tool calls) + reasoning over the eventbus ─────
+def _investigation_steps(ctx: IncidentContext) -> list[dict[str, str]]:
+    """The tools the SRE 'consulted', derived from the gathered context (honest)."""
+    ev = ctx.events or []
+    steps: list[dict[str, str]] = [
+        {
+            "tool": "get_events",
+            "arg": f"{ctx.namespace}/{ctx.name}",
+            "result": (str(ev[0])[:64] if ev else ctx.reason),
+        }
+    ]
+    logs = getattr(ctx, "logs", None)
+    if logs:
+        steps.append({"tool": "get_pod_logs", "arg": ctx.name, "result": str(logs).strip()[:64]})
+    if ctx.container_statuses:
+        steps.append(
+            {
+                "tool": "describe_pod",
+                "arg": ctx.name,
+                "result": f"{len(ctx.container_statuses)} container status(es)",
+            }
+        )
+    return steps[:3]
+
+
+async def _safe_publish(bus: Any, event: dict[str, Any]) -> None:
+    try:
+        await bus.publish(event)
+    except Exception:  # noqa: BLE001 - streaming is best-effort, never fatal
+        pass
+
+
+async def diagnose_streaming(
+    provider: AIProvider,
+    ctx: IncidentContext,
+    *,
+    tenant_id: str,
+    incident_id: str,
+    bus: Any,
+) -> tuple[RCA, str, str]:
+    """
+    Diagnose while streaming the investigation + reasoning to the dashboard.
+
+    Publishes ``tool.call`` events (what it looked at), runs the real diagnosis
+    (live GPT JSON or the deterministic engine), then streams the root cause as
+    ``reasoning.chunk`` events. Pacing only kicks in when a client is connected,
+    so tests stay fast. Returns (rca, model_used, provider_name).
+    """
+    paced = getattr(bus, "subscriber_count", 0) > 0
+
+    for step in _investigation_steps(ctx):
+        await _safe_publish(
+            bus, {"type": "tool.call", "tenant_id": tenant_id, "incident_id": incident_id, **step}
+        )
+        if paced:
+            await asyncio.sleep(0.35)
+
+    rca, ai = await diagnose(provider, ctx)
+
+    words = rca.root_cause.split()
+    acc: list[str] = []
+    for i, word in enumerate(words):
+        acc.append(word)
+        if (i + 1) % 4 == 0 or i == len(words) - 1:
+            await _safe_publish(
+                bus,
+                {
+                    "type": "reasoning.chunk",
+                    "tenant_id": tenant_id,
+                    "incident_id": incident_id,
+                    "text": " ".join(acc),
+                },
+            )
+            if paced:
+                await asyncio.sleep(0.11)
+
+    model_used = ai.model_id if ai else "deterministic"
+    provider_name = ai.provider if ai else "deterministic"
+    return rca, model_used, provider_name

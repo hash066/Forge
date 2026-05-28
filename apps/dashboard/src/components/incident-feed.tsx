@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from 'framer-motion';
 import { Play, ShieldCheck } from 'lucide-react';
-import type { Incident } from '@devforge/core';
+import type { Incident, ToolStep } from '@devforge/core';
 import { IncidentCard } from './incident-card';
 
 interface IncidentFeedProps {
@@ -10,9 +10,18 @@ interface IncidentFeedProps {
   onApprove: (incident: Incident) => void;
   onRunDemo: () => void;
   demoRunning: boolean;
+  reasoning?: Record<string, string>;
+  tools?: Record<string, ToolStep[]>;
 }
 
-export function IncidentFeed({ incidents, onApprove, onRunDemo, demoRunning }: IncidentFeedProps) {
+export function IncidentFeed({
+  incidents,
+  onApprove,
+  onRunDemo,
+  demoRunning,
+  reasoning,
+  tools,
+}: IncidentFeedProps) {
   const open = incidents.filter((i) => i.status !== 'resolved');
 
   return (
@@ -59,7 +68,13 @@ export function IncidentFeed({ incidents, onApprove, onRunDemo, demoRunning }: I
         <motion.div layout className="flex flex-col gap-3">
           <AnimatePresence initial={false}>
             {incidents.map((incident) => (
-              <IncidentCard key={incident.id} incident={incident} onApprove={onApprove} />
+              <IncidentCard
+                key={incident.id}
+                incident={incident}
+                onApprove={onApprove}
+                streamedReasoning={reasoning?.[incident.id]}
+                streamedTools={tools?.[incident.id]}
+              />
             ))}
           </AnimatePresence>
         </motion.div>

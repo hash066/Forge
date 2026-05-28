@@ -208,7 +208,23 @@ export type StreamEvent =
       outcome: string;
       action: string;
     }
+  | { type: "incident.detected"; tenant_id: string; incident: Incident }
+  | { type: "reasoning.chunk"; tenant_id: string; incident_id: string; text: string }
+  | {
+      type: "tool.call";
+      tenant_id: string;
+      incident_id: string;
+      tool: string;
+      arg: string;
+      result: string;
+    }
   | { type: "snapshot"; tenant_id: string; snapshot: ClusterSnapshot };
+
+export interface ToolStep {
+  tool: string;
+  arg: string;
+  result: string;
+}
 
 export const SEVERITY_ORDER: Record<string, number> = {
   critical: 4,
