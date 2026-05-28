@@ -312,6 +312,67 @@ export function useClusterFeed() {
     [client],
   );
 
+  const rejectIncident = useCallback(
+    async (incident: Incident) => {
+      const plan = (incident.remediation ?? {}) as { action?: string; target?: string };
+      try {
+        await client.reportRemediation({
+          incident_id: incident.id,
+          remediation_id: remediationByIncident.current.get(incident.id),
+          action: plan.action,
+          target: plan.target,
+          status: 'skipped',
+          detail: 'operator: rejected from dashboard',
+        });
+        toast.info('Remediation rejected.');
+      } catch {
+        toast.error('Action failed — control plane unreachable.');
+      }
+    },
+    [client],
+  );
+
+  const overrideIncident = useCallback(
+    async (incident: Incident, action: string) => {
+      const plan = (incident.remediation ?? {}) as { target?: string };
+      try {
+        await client.reportRemediation({
+          incident_id: incident.id,
+          remediation_id: remediationByIncident.current.get(incident.id),
+          action,
+          target: plan.target,
+          status: 'applied',
+          detail: `operator: override → ${action}`,
+        });
+        toast.success(`Override applied: ${action}.`);
+      } catch {
+        toast.error('Override failed — control plane unreachable.');
+      }
+    },
+    [client],
+  );
+
+  const reDiagnose = useCallback(
+    async (incident: Incident) => {
+      try {
+        await client.diagnose({
+          cluster: incident.cluster,
+          namespace: incident.namespace,
+          kind: incident.kind,
+          name: incident.name,
+          reason: incident.reason,
+          severity: incident.severity,
+          message: incident.summary,
+          events: (incident.evidence ?? []).map(String),
+        });
+        toast.info(`Re-diagnosing ${incident.name}…`);
+      } catch {
+        toast.error('Re-diagnose failed — control plane unreachable.');
+      }
+    },
+    [client],
+  );
+
   const ask = useCallback((question: string) => client.ask(question), [client]);
   const diagnoseOne = useCallback(
     async (ctx: IncidentContext): Promise<DiagnoseResponse | null> => {
@@ -340,6 +401,9 @@ export function useClusterFeed() {
     ...state,
     runDemo,
     approveIncident,
+    rejectIncident,
+    overrideIncident,
+    reDiagnose,
     ask,
     diagnoseOne,
     fetchSettings,

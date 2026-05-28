@@ -9,6 +9,7 @@ import { Sparkline } from '@/components/ui/sparkline';
 import { ActivityRail } from '@/components/activity-rail';
 import { HealthRing } from '@/components/health-ring';
 import { IncidentFeed } from '@/components/incident-feed';
+import { IncidentDetail } from '@/components/incidents/incident-detail';
 import { StatCards } from '@/components/stat-cards';
 import { TopBar } from '@/components/topbar';
 import { Sidebar, type ViewKey } from '@/components/shell/sidebar';
@@ -68,6 +69,7 @@ const VIEW_META: Record<ViewKey, { title: string; kicker: string; sub: string }>
 
 export default function DashboardPage() {
   const [view, setView] = useState<ViewKey>('overview');
+  const [detail, setDetail] = useState<Incident | null>(null);
   const feed = useClusterFeed();
   const snapshot = feed.snapshot;
   const health = snapshot?.health_score ?? 100;
@@ -111,6 +113,8 @@ export default function DashboardPage() {
             </div>
           )}
 
+          {feed.online && feed.mode !== 'live' && view === 'overview' && <ConnectBanner />}
+
           {view === 'overview' && (
             <div className="flex flex-col gap-4">
               <div className="grid gap-4 lg:grid-cols-[260px_1fr]">
@@ -128,6 +132,7 @@ export default function DashboardPage() {
                   demoRunning={feed.demoRunning}
                   reasoning={feed.reasoning}
                   tools={feed.tools}
+                  onOpen={setDetail}
                 />
                 <ActivityRail remediations={feed.remediations} audit={feed.audit} />
               </div>
@@ -150,6 +155,8 @@ export default function DashboardPage() {
                 demoRunning={feed.demoRunning}
                 reasoning={feed.reasoning}
                 tools={feed.tools}
+                onOpen={setDetail}
+                filterable
               />
               <ActivityRail remediations={feed.remediations} audit={feed.audit} />
             </div>
@@ -169,6 +176,27 @@ export default function DashboardPage() {
               cluster={CLUSTER_NAME}
             />
           )}
+
+          <IncidentDetail
+            incident={detail}
+            open={detail !== null}
+            onClose={() => setDetail(null)}
+            reasoning={detail ? feed.reasoning[detail.id] : undefined}
+            tools={detail ? feed.tools[detail.id] : undefined}
+            onApprove={(i) => {
+              feed.approveIncident(i);
+              setDetail(null);
+            }}
+            onReject={(i) => {
+              feed.rejectIncident(i);
+              setDetail(null);
+            }}
+            onOverride={(i, action) => {
+              feed.overrideIncident(i, action);
+              setDetail(null);
+            }}
+            onReDiagnose={(i) => feed.reDiagnose(i)}
+          />
 
           <footer className="mt-10 flex items-center justify-between border-t border-subtle pt-4 text-xs text-foreground-tertiary">
             <span>DevForge OS · autonomous Kubernetes SRE</span>
@@ -220,6 +248,30 @@ function TrendsPanel({
           <div className="text-[11px] text-foreground-tertiary">auto-heal rate</div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function ConnectBanner() {
+  const [closed, setClosed] = useState(false);
+  if (closed) return null;
+  return (
+    <div className="mb-5 flex items-center gap-3 rounded-xl border border-subtle bg-elevated/50 px-4 py-3">
+      <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-foreground-tertiary" />
+      <p className="flex-1 text-sm text-foreground-secondary">
+        <span className="font-semibold text-foreground">Simulation mode.</span> A realistic replay —
+        connect a real cluster to go live:{' '}
+        <code className="rounded bg-background/60 px-1.5 py-0.5 font-mono text-xs text-brand-300">
+          helm install devforge-os ./deploy/helm/devforge-os
+        </code>
+      </p>
+      <button
+        onClick={() => setClosed(true)}
+        className="shrink-0 rounded-md px-2 py-0.5 text-foreground-tertiary transition hover:text-foreground"
+        aria-label="Dismiss"
+      >
+        ×
+      </button>
     </div>
   );
 }

@@ -1,7 +1,8 @@
 'use client';
 
+import { useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Play, ShieldCheck } from 'lucide-react';
+import { Play, Search, ShieldCheck } from 'lucide-react';
 import type { Incident, ToolStep } from '@devforge/core';
 import { IncidentCard } from './incident-card';
 
@@ -12,6 +13,8 @@ interface IncidentFeedProps {
   demoRunning: boolean;
   reasoning?: Record<string, string>;
   tools?: Record<string, ToolStep[]>;
+  onOpen?: (incident: Incident) => void;
+  filterable?: boolean;
 }
 
 export function IncidentFeed({
@@ -21,8 +24,23 @@ export function IncidentFeed({
   demoRunning,
   reasoning,
   tools,
+  onOpen,
+  filterable,
 }: IncidentFeedProps) {
   const open = incidents.filter((i) => i.status !== 'resolved');
+  const [query, setQuery] = useState('');
+  const [statusF, setStatusF] = useState('all');
+  const [sevF, setSevF] = useState('all');
+  const visible = useMemo(() => {
+    if (!filterable) return incidents;
+    const q = query.trim().toLowerCase();
+    return incidents.filter(
+      (i) =>
+        (statusF === 'all' || i.status === statusF) &&
+        (sevF === 'all' || i.severity === sevF) &&
+        (q === '' || `${i.namespace} ${i.name} ${i.reason}`.toLowerCase().includes(q)),
+    );
+  }, [incidents, filterable, query, statusF, sevF]);
 
   return (
     <section className="panel flex flex-col p-4">
@@ -42,6 +60,43 @@ export function IncidentFeed({
           </span>
         )}
       </div>
+
+      {filterable && incidents.length > 0 && (
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <div className="flex flex-1 items-center gap-2 rounded-lg border border-subtle bg-background/60 px-2.5 py-1.5">
+            <Search className="h-3.5 w-3.5 text-foreground-tertiary" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search incidents…"
+              className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-foreground-tertiary"
+            />
+          </div>
+          <select
+            value={statusF}
+            onChange={(e) => setStatusF(e.target.value)}
+            className="cursor-pointer rounded-lg border border-subtle bg-background/60 px-2 py-1.5 text-xs text-foreground-secondary outline-none"
+          >
+            <option value="all">All statuses</option>
+            <option value="detected">Detected</option>
+            <option value="diagnosing">Diagnosing</option>
+            <option value="remediating">Remediating</option>
+            <option value="suggested">Awaiting approval</option>
+            <option value="resolved">Resolved</option>
+          </select>
+          <select
+            value={sevF}
+            onChange={(e) => setSevF(e.target.value)}
+            className="cursor-pointer rounded-lg border border-subtle bg-background/60 px-2 py-1.5 text-xs text-foreground-secondary outline-none"
+          >
+            <option value="all">All severities</option>
+            <option value="critical">Critical</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+      )}
 
       {incidents.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-4 py-16 text-center">
@@ -64,14 +119,19 @@ export function IncidentFeed({
             {demoRunning ? 'Running…' : 'Run live demo'}
           </button>
         </div>
+      ) : visible.length === 0 ? (
+        <p className="py-10 text-center text-sm text-foreground-tertiary">
+          No incidents match your filters.
+        </p>
       ) : (
         <motion.div layout className="flex flex-col gap-3">
           <AnimatePresence initial={false}>
-            {incidents.map((incident) => (
+            {visible.map((incident) => (
               <IncidentCard
                 key={incident.id}
                 incident={incident}
                 onApprove={onApprove}
+                onOpen={onOpen}
                 streamedReasoning={reasoning?.[incident.id]}
                 streamedTools={tools?.[incident.id]}
               />

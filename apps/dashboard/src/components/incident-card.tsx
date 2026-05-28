@@ -28,6 +28,8 @@ interface IncidentCardProps {
   streamedReasoning?: string;
   /** Live tool-call trace streamed over WebSocket (falls back to derived trace). */
   streamedTools?: ToolStep[];
+  /** Open the full detail drawer. */
+  onOpen?: (incident: Incident) => void;
 }
 
 interface Plan {
@@ -44,6 +46,7 @@ export function IncidentCard({
   onApprove,
   streamedReasoning,
   streamedTools,
+  onOpen,
 }: IncidentCardProps) {
   const sev = severityPalette(incident.severity);
   const status = statusMeta(incident.status);
@@ -60,7 +63,8 @@ export function IncidentCard({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, scale: 0.97 }}
       transition={{ type: 'spring', stiffness: 120, damping: 20 }}
-      className={`panel overflow-hidden ${isResolved ? 'opacity-80' : ''}`}
+      onClick={() => onOpen?.(incident)}
+      className={`panel cursor-pointer overflow-hidden transition hover:border-border-default ${isResolved ? 'opacity-80' : ''}`}
     >
       {/* status accent bar */}
       <div className={`h-0.5 w-full ${status.palette.dot}`} />
@@ -142,7 +146,10 @@ export function IncidentCard({
               </span>
             ) : isSuggested ? (
               <button
-                onClick={() => onApprove(incident)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onApprove(incident);
+                }}
                 className="inline-flex items-center gap-1 rounded-lg border border-brand-500/40 bg-brand-500/10 px-3 py-1.5 text-xs font-semibold text-brand-400 transition hover:bg-brand-500/20"
               >
                 Approve & apply
