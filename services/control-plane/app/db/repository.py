@@ -14,7 +14,7 @@ from typing import Any
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import AuditLog, ClusterSnapshot, Incident, Remediation
+from app.models import AuditLog, ClusterSnapshot, Incident, Remediation, RemediationPolicy
 
 
 # ── Incidents ────────────────────────────────────────────────────────────────
@@ -102,6 +102,23 @@ async def latest_snapshot(
     stmt = stmt.order_by(ClusterSnapshot.created_at.desc()).limit(1)
     result = await session.execute(stmt)
     return result.scalar_one_or_none()
+
+
+# ── Remediation policy (Settings) ──────────────────────────────────────────────
+async def get_policy(session: AsyncSession, tenant_id: str) -> RemediationPolicy | None:
+    return await session.get(RemediationPolicy, tenant_id)
+
+
+async def upsert_policy(session: AsyncSession, tenant_id: str, **fields: Any) -> RemediationPolicy:
+    policy = await session.get(RemediationPolicy, tenant_id)
+    if policy is None:
+        policy = RemediationPolicy(tenant_id=tenant_id, **fields)
+        session.add(policy)
+    else:
+        for key, value in fields.items():
+            setattr(policy, key, value)
+    await session.flush()
+    return policy
 
 
 # ── Audit ─────────────────────────────────────────────────────────────────────

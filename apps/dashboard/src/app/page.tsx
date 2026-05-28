@@ -13,7 +13,9 @@ import { StatCards } from '@/components/stat-cards';
 import { TopBar } from '@/components/topbar';
 import { Sidebar, type ViewKey } from '@/components/shell/sidebar';
 import { ClusterMap } from '@/components/topology/cluster-map';
-import { CLUSTER_NAME } from '@/lib/config';
+import { SettingsView } from '@/components/views/settings-view';
+import { LabView } from '@/components/views/lab-view';
+import { API_URL, CLUSTER_NAME, TENANT_ID } from '@/lib/config';
 import { timeAgo } from '@/lib/format';
 
 const VIEW_META: Record<ViewKey, { title: string; kicker: string; sub: string }> = {
@@ -51,6 +53,16 @@ const VIEW_META: Record<ViewKey, { title: string; kicker: string; sub: string }>
     kicker: 'Compliance',
     title: 'Audit trail',
     sub: 'Every detection, diagnosis, and remediation — immutable and tenant-scoped.',
+  },
+  lab: {
+    kicker: 'Hands-on',
+    title: 'Incident lab',
+    sub: 'Run a single real diagnosis on a chosen workload and watch the AI investigate live.',
+  },
+  settings: {
+    kicker: 'Configuration',
+    title: 'Settings',
+    sub: 'Tune the remediation policy that governs the self-healing loop, and connect your cluster.',
   },
 };
 
@@ -147,6 +159,16 @@ export default function DashboardPage() {
           {view === 'cost' && <CostView snapshot={snapshot} incidents={feed.incidents} />}
           {view === 'security' && <SecurityView snapshot={snapshot} incidents={feed.incidents} />}
           {view === 'audit' && <AuditView audit={feed.audit} />}
+          {view === 'lab' && <LabView diagnoseOne={feed.diagnoseOne} />}
+          {view === 'settings' && (
+            <SettingsView
+              fetchSettings={feed.fetchSettings}
+              saveSettings={feed.saveSettings}
+              apiUrl={API_URL}
+              tenant={TENANT_ID}
+              cluster={CLUSTER_NAME}
+            />
+          )}
 
           <footer className="mt-10 flex items-center justify-between border-t border-subtle pt-4 text-xs text-foreground-tertiary">
             <span>DevForge OS · autonomous Kubernetes SRE</span>

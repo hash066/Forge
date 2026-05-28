@@ -3,10 +3,12 @@
 import { motion } from 'framer-motion';
 import {
   Activity,
+  FlaskConical,
   GitBranch,
   LayoutDashboard,
   MessageSquareText,
   ScrollText,
+  Settings as SettingsIcon,
   ShieldAlert,
   Wallet,
   type LucideIcon,
@@ -16,10 +18,12 @@ export type ViewKey =
   | 'overview'
   | 'topology'
   | 'incidents'
+  | 'lab'
   | 'ask'
   | 'cost'
   | 'security'
-  | 'audit';
+  | 'audit'
+  | 'settings';
 
 interface NavItem {
   key: ViewKey;
@@ -31,10 +35,12 @@ const NAV: NavItem[] = [
   { key: 'overview', label: 'Overview', icon: LayoutDashboard },
   { key: 'topology', label: 'Topology', icon: GitBranch },
   { key: 'incidents', label: 'Incidents', icon: Activity },
+  { key: 'lab', label: 'Lab', icon: FlaskConical },
   { key: 'ask', label: 'Ask', icon: MessageSquareText },
   { key: 'cost', label: 'Cost', icon: Wallet },
   { key: 'security', label: 'Security', icon: ShieldAlert },
   { key: 'audit', label: 'Audit', icon: ScrollText },
+  { key: 'settings', label: 'Settings', icon: SettingsIcon },
 ];
 
 interface SidebarProps {

@@ -170,6 +170,21 @@ export interface AskResponse {
   provider: string;
 }
 
+export interface RemediationPolicySettings {
+  mode: 'auto' | 'suggest' | 'off' | string;
+  max_auto_risk: RiskLevel | string;
+  excluded_namespaces: string[];
+  allowed_actions: string[];
+  notify_webhook: string;
+}
+
+export interface SettingsResponse {
+  ai_provider: string;
+  ai_model: string;
+  ai_connected: boolean;
+  policy: RemediationPolicySettings;
+}
+
 export interface ClusterSnapshotInput {
   cluster?: string;
   nodes?: number;

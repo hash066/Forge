@@ -5,9 +5,13 @@ import {
   DevForgeClient,
   type AuditEntry,
   type ClusterSnapshot,
+  type DiagnoseResponse,
   type Incident,
+  type IncidentContext,
   type IncidentStats,
   type Remediation,
+  type RemediationPolicySettings,
+  type SettingsResponse,
   type StreamEvent,
   type ToolStep,
 } from '@devforge/core';
@@ -309,6 +313,36 @@ export function useClusterFeed() {
   );
 
   const ask = useCallback((question: string) => client.ask(question), [client]);
+  const diagnoseOne = useCallback(
+    async (ctx: IncidentContext): Promise<DiagnoseResponse | null> => {
+      try {
+        const r = await client.diagnose(ctx);
+        toast.success(`Diagnosed ${ctx.name}.`);
+        return r;
+      } catch {
+        toast.error('Diagnose failed — control plane unreachable.');
+        return null;
+      }
+    },
+    [client],
+  );
+  const fetchSettings = useCallback(() => client.getSettings(), [client]);
+  const saveSettings = useCallback(
+    async (policy: Partial<RemediationPolicySettings>): Promise<SettingsResponse> => {
+      const res = await client.putSettings(policy);
+      toast.success('Settings saved — policy now governs remediation.');
+      return res;
+    },
+    [client],
+  );
 
-  return { ...state, runDemo, approveIncident, ask };
+  return {
+    ...state,
+    runDemo,
+    approveIncident,
+    ask,
+    diagnoseOne,
+    fetchSettings,
+    saveSettings,
+  };
 }

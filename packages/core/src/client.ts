@@ -13,6 +13,8 @@ import type {
   Overview,
   Remediation,
   RemediateReport,
+  RemediationPolicySettings,
+  SettingsResponse,
   StreamEvent,
 } from "./types";
 
@@ -60,6 +62,16 @@ export class DevForgeClient {
     return (await res.json()) as T;
   }
 
+  private async put<T>(path: string, body: unknown): Promise<T> {
+    const res = await fetch(`${this.baseUrl}${path}`, {
+      method: "PUT",
+      headers: this.headers(),
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error(`PUT ${path} -> ${res.status}`);
+    return (await res.json()) as T;
+  }
+
   // ── REST ───────────────────────────────────────────────────────────────────
   getOverview(): Promise<Overview> {
     return this.get<Overview>("/v1/k8s/overview");
@@ -97,6 +109,16 @@ export class DevForgeClient {
   /** Natural-language Q&A over live cluster state ("Ask your cluster"). */
   ask(question: string): Promise<AskResponse> {
     return this.post<AskResponse>("/v1/k8s/ask", { question });
+  }
+
+  /** AI status + the tenant's remediation policy. */
+  getSettings(): Promise<SettingsResponse> {
+    return this.get<SettingsResponse>("/v1/k8s/settings");
+  }
+
+  /** Update the remediation policy (partial). */
+  putSettings(policy: Partial<RemediationPolicySettings>): Promise<SettingsResponse> {
+    return this.put<SettingsResponse>("/v1/k8s/settings", policy);
   }
 
   async isHealthy(): Promise<boolean> {

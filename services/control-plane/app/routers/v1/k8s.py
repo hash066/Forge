@@ -43,8 +43,11 @@ from app.schemas.k8s import (
     RemediationOut,
     SnapshotOut,
 )
-from pydantic import Field
+from typing import Any
 
+from pydantic import BaseModel, Field
+
+from app.config import get_settings
 from app.schemas.common import StrictModel
 from app.services import k8s_rca
 from app.services.ai import AIProviderError, get_ai_provider
@@ -81,6 +84,104 @@ def _offline_answer(context: dict) -> str:
         f"${snap.get('monthly_waste_usd', 0):.0f}/mo and {snap.get('security_findings', 0)} "
         "security finding(s). Set OPENAI_API_KEY for a full natural-language answer."
     )
+
+
+# ── Settings / RemediationPolicy ───────────────────────────────────────────────
+class PolicyUpdate(StrictModel):
+    mode: str | None = None
+    max_auto_risk: str | None = None
+    excluded_namespaces: list[str] | None = None
+    allowed_actions: list[str] | None = None
+    notify_webhook: str | None = None
+
+
+class SettingsResponse(BaseModel):
+    ai_provider: str
+    ai_model: str
+    ai_connected: bool
+    policy: dict[str, Any]
+
+
+_RISK_ORDER = {"low": 1, "medium": 2, "high": 3}
+
+
+def _policy_dict(policy: Any, default_mode: str) -> dict[str, Any]:
+    if policy is None:
+        return {
+            "mode": default_mode,
+            "max_auto_risk": "low",
+            "excluded_namespaces": [],
+            "allowed_actions": [],
+            "notify_webhook": "",
+        }
+    return {
+        "mode": policy.mode,
+        "max_auto_risk": policy.max_auto_risk,
+        "excluded_namespaces": policy.excluded_namespaces or [],
+        "allowed_actions": policy.allowed_actions or [],
+        "notify_webhook": policy.notify_webhook or "",
+    }
+
+
+def _effective_mode(
+    policy: Any, plan_mode: str, plan_risk: str, plan_action: str, namespace: str, default_mode: str
+) -> str:
+    """Resolve the actual remediation mode for an incident given the tenant policy."""
+    if policy is None:
+        return plan_mode if plan_mode in ("auto", "suggest") else default_mode
+    if policy.mode in ("off", "suggest"):
+        return "suggest"  # never auto-act
+    # mode == auto: only within the risk ceiling, allowed action, non-excluded namespace
+    if namespace in (policy.excluded_namespaces or []):
+        return "suggest"
+    if policy.allowed_actions and plan_action not in policy.allowed_actions:
+        return "suggest"
+    if _RISK_ORDER.get(plan_risk, 1) > _RISK_ORDER.get(policy.max_auto_risk, 1):
+        return "suggest"
+    return "auto"
+
+
+def _build_settings_response(provider: Any, policy: Any) -> SettingsResponse:
+    cfg = get_settings()
+    ai_model = cfg.openai_model if cfg.ai_provider == "openai" else cfg.aws_bedrock_model_id
+    return SettingsResponse(
+        ai_provider=provider.name,
+        ai_model=ai_model,
+        ai_connected=provider.name != "offline",
+        policy=_policy_dict(policy, cfg.remediation_default_mode),
+    )
+
+
+@router.get("/settings", response_model=SettingsResponse, summary="Get AI status + remediation policy")
+async def get_settings_endpoint(
+    ctx: TenantContext = Depends(tenant_context),
+    session: AsyncSession = Depends(get_session),
+) -> SettingsResponse:
+    policy = await repo.get_policy(session, ctx.tenant_id)
+    return _build_settings_response(get_ai_provider(), policy)
+
+
+@router.put("/settings", response_model=SettingsResponse, summary="Update the remediation policy")
+async def put_settings_endpoint(
+    payload: PolicyUpdate,
+    ctx: TenantContext = Depends(tenant_context),
+    session: AsyncSession = Depends(get_session),
+) -> SettingsResponse:
+    data = {k: v for k, v in payload.model_dump().items() if v is not None}
+    if data:
+        await repo.upsert_policy(session, ctx.tenant_id, **data)
+        await repo.write_audit(
+            session,
+            tenant_id=ctx.tenant_id,
+            action="settings.updated",
+            actor="dashboard",
+            resource_type="RemediationPolicy",
+            resource_id=ctx.tenant_id,
+            payload=data,
+        )
+        await session.commit()
+    policy = await repo.get_policy(session, ctx.tenant_id)
+    return _build_settings_response(get_ai_provider(), policy)
 
 
 @router.post("/diagnose", response_model=DiagnoseResponse, summary="Diagnose a cluster incident")
@@ -133,11 +234,24 @@ async def diagnose_incident(
         provider, payload, tenant_id=ctx.tenant_id, incident_id=incident.id, bus=bus
     )
 
+    # The tenant's RemediationPolicy governs whether this fix auto-applies.
+    policy = await repo.get_policy(session, ctx.tenant_id)
+    effective_mode = _effective_mode(
+        policy,
+        rca.remediation.mode,
+        rca.remediation.risk,
+        rca.remediation.action,
+        payload.namespace,
+        get_settings().remediation_default_mode,
+    )
+    rem_dump = rca.remediation.model_dump()
+    rem_dump["mode"] = effective_mode
+
     incident.summary = rca.summary
     incident.root_cause = rca.root_cause
     incident.confidence = rca.confidence
     incident.evidence = rca.evidence
-    incident.remediation = rca.remediation.model_dump()
+    incident.remediation = rem_dump
     incident.model_used = model_used
 
     rem = await repo.create_remediation(
@@ -146,14 +260,14 @@ async def diagnose_incident(
         incident_id=incident.id,
         action=rca.remediation.action,
         target=rca.remediation.target,
-        mode=rca.remediation.mode,
+        mode=effective_mode,
         status="proposed",
         rationale=rca.remediation.rationale,
         patch=rca.remediation.patch,
         risk=rca.remediation.risk,
     )
 
-    incident.status = "remediating" if rca.remediation.mode == "auto" else "suggested"
+    incident.status = "remediating" if effective_mode == "auto" else "suggested"
     await repo.write_audit(
         session,
         tenant_id=ctx.tenant_id,
